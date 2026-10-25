@@ -88,7 +88,7 @@ export function RazorpayStandardButton({
       const razorpayKey =
         key_id ||
         process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID ||
-        "rzp_test_Ts3hLoeVcYerdE";
+        "";
 
       if (!window.Razorpay) {
         throw new Error("Razorpay checkout SDK is not ready yet. Please try again.");

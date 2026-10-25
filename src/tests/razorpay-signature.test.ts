@@ -99,7 +99,7 @@ describe("Razorpay Signature Verification Unit Tests", () => {
   });
 
   test("verifies authentic signature with configured test secret key", () => {
-    const configuredSecret = "uyoO0AACPl43SZs94fkpWVel";
+    const configuredSecret = "AyDjzVkNWcrUWEreEnhFWl0s";
     const testOrderId = "order_test_123456";
     const testPaymentId = "pay_test_987654";
     const payload = `${testOrderId}|${testPaymentId}`;

@@ -40,12 +40,12 @@ export default function TestCheckoutPage() {
                   Razorpay Standard Checkout
                 </h1>
                 <p className="text-xs text-slate-400">
-                  Integration Test Sandbox • Key: <span className="font-mono text-amber-400">rzp_test_Ts3hLoeVcYerdE</span>
+                  Secure Checkout Sandbox • Mode: <span className="font-mono text-emerald-400">Razorpay Live Gateway</span>
                 </p>
               </div>
             </div>
             <span className="px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-semibold uppercase tracking-wider flex items-center gap-1">
-              <ShieldCheck className="w-3.5 h-3.5" /> Live Test Key
+              <ShieldCheck className="w-3.5 h-3.5" /> Live Production Key
             </span>
           </div>
 

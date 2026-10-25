@@ -23,7 +23,7 @@ async function main() {
 
   const orderId = createData.order_id;
   const paymentId = `pay_test_${Date.now()}`;
-  const keySecret = "uyoO0AACPl43SZs94fkpWVel";
+  const keySecret = process.env.RAZORPAY_KEY_SECRET || "AyDjzVkNWcrUWEreEnhFWl0s";
 
   // Compute expected HMAC SHA-256 signature
   const validSignature = crypto
