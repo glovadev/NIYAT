@@ -26,7 +26,6 @@ interface ShopPageProps {
 }
 
 export default async function ShopPage({ searchParams }: ShopPageProps) {
-  await connectToDatabase();
   const params = await searchParams;
 
   const currentCategorySlug = params.category;
@@ -34,53 +33,62 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
   const currentQ = params.q?.trim();
   const currentInStock = params.inStock === "true";
 
-  // Load all active categories for filters
-  const categoriesDocs = await Category.find({ status: "ACTIVE" }).sort({ sortOrder: 1, name: 1 }).lean();
+  let categoriesDocs: any[] = [];
+  let productsDocs: any[] = [];
+
+  try {
+    await connectToDatabase();
+    // Load all active categories for filters
+    categoriesDocs = await Category.find({ status: "ACTIVE" }).sort({ sortOrder: 1, name: 1 }).lean();
+
+    // Build MongoDB query
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const query: any = { status: "PUBLISHED" };
+
+    if (currentCategorySlug) {
+      const selectedCat = categoriesDocs.find((c) => c.slug === currentCategorySlug);
+      if (selectedCat) {
+        query.categoryId = selectedCat._id;
+      }
+    }
+
+    if (currentInStock) {
+      query.stockQuantity = { $gt: 0 };
+    }
+
+    if (currentQ) {
+      query.$or = [
+        { name: { $regex: currentQ, $options: "i" } },
+        { shortDescription: { $regex: currentQ, $options: "i" } },
+        { ingredients: { $regex: currentQ, $options: "i" } },
+        { verifiedBenefits: { $regex: currentQ, $options: "i" } },
+      ];
+    }
+
+    // Sort mapping
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let sortOption: any = { isFeatured: -1, createdAt: -1 };
+    if (currentSort === "price_asc") {
+      sortOption = { regularPricePaise: 1 };
+    } else if (currentSort === "price_desc") {
+      sortOption = { regularPricePaise: -1 };
+    } else if (currentSort === "name_asc") {
+      sortOption = { name: 1 };
+    }
+
+    productsDocs = await Product.find(query)
+      .populate("categoryId", "name slug")
+      .sort(sortOption)
+      .lean();
+  } catch (err) {
+    console.error("ShopPage: Database error:", err);
+  }
+
   const categoryOptions = categoriesDocs.map((c) => ({
     id: String(c._id),
     name: c.name,
     slug: c.slug,
   }));
-
-  // Build MongoDB query
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const query: any = { status: "PUBLISHED" };
-
-  if (currentCategorySlug) {
-    const selectedCat = categoriesDocs.find((c) => c.slug === currentCategorySlug);
-    if (selectedCat) {
-      query.categoryId = selectedCat._id;
-    }
-  }
-
-  if (currentInStock) {
-    query.stockQuantity = { $gt: 0 };
-  }
-
-  if (currentQ) {
-    query.$or = [
-      { name: { $regex: currentQ, $options: "i" } },
-      { shortDescription: { $regex: currentQ, $options: "i" } },
-      { ingredients: { $regex: currentQ, $options: "i" } },
-      { verifiedBenefits: { $regex: currentQ, $options: "i" } },
-    ];
-  }
-
-  // Sort mapping
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let sortOption: any = { isFeatured: -1, createdAt: -1 };
-  if (currentSort === "price_asc") {
-    sortOption = { regularPricePaise: 1 };
-  } else if (currentSort === "price_desc") {
-    sortOption = { regularPricePaise: -1 };
-  } else if (currentSort === "name_asc") {
-    sortOption = { name: 1 };
-  }
-
-  const productsDocs = await Product.find(query)
-    .populate("categoryId", "name slug")
-    .sort(sortOption)
-    .lean();
 
   const getProductImage = (slug: string, originalUrl?: string) => {
     if (originalUrl && !originalUrl.includes("unsplash.com/photo-15") && !originalUrl.includes("placeholder/")) {

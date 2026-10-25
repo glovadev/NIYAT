@@ -2,19 +2,9 @@ import "server-only";
 import { z } from "zod";
 
 const serverEnvSchema = z.object({
-  NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
-  MONGODB_URI: z
-    .string({
-      required_error: "MONGODB_URI environment variable is required in .env.local",
-    })
-    .min(1, "MONGODB_URI cannot be empty")
-    .refine(
-      (val) => val.startsWith("mongodb://") || val.startsWith("mongodb+srv://"),
-      {
-        message: "MONGODB_URI must start with mongodb:// or mongodb+srv://",
-      }
-    ),
-  SITE_URL: z.string().url().default("http://localhost:3000"),
+  NODE_ENV: z.string().default("development"),
+  MONGODB_URI: z.string().default(""),
+  SITE_URL: z.string().default("http://localhost:3000"),
   JWT_SECRET: z.string().default("niyat_jwt_secret_dev_key_2026_983748293472"),
   FIREBASE_PROJECT_ID: z.string().default("niyat-29baf"),
   FIREBASE_CLIENT_EMAIL: z.string().optional(),

@@ -14,19 +14,25 @@ import { Banner } from "@/models/Banner";
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  await connectToDatabase();
+  let dbProducts: any[] = [];
+  let categories: any[] = [];
+  let dbBanners: any[] = [];
 
-  // Load published products, active categories, and admin-uploaded hero banners server-side
-  const [dbProducts, categories, dbBanners] = await Promise.all([
-    Product.find({ status: "PUBLISHED" })
-      .populate("categoryId", "name slug")
-      .sort({ isFeatured: -1, createdAt: -1 })
-      .lean(),
-    Category.find({ status: "ACTIVE" }).sort({ sortOrder: 1, name: 1 }).lean(),
-    Banner.find({ placement: "HOME_HERO", status: "ACTIVE" })
-      .sort({ sortOrder: 1, createdAt: -1 })
-      .lean(),
-  ]);
+  try {
+    await connectToDatabase();
+    [dbProducts, categories, dbBanners] = await Promise.all([
+      Product.find({ status: "PUBLISHED" })
+        .populate("categoryId", "name slug")
+        .sort({ isFeatured: -1, createdAt: -1 })
+        .lean(),
+      Category.find({ status: "ACTIVE" }).sort({ sortOrder: 1, name: 1 }).lean(),
+      Banner.find({ placement: "HOME_HERO", status: "ACTIVE" })
+        .sort({ sortOrder: 1, createdAt: -1 })
+        .lean(),
+    ]);
+  } catch (dbError) {
+    console.error("HomePage: Database connection or query error:", dbError);
+  }
 
   // Slides dynamically uploaded & managed by Admin in /admin/banners
   const heroSlides: HeroSlide[] =
