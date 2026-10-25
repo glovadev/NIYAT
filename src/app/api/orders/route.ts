@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { connectToDatabase } from "@/lib/db/mongoose";
 import { getAuthenticatedUser } from "@/lib/auth/server";
 import { calculateCartQuote } from "@/lib/checkout/pricing";
 import { Order } from "@/models/Order";
@@ -43,6 +44,7 @@ function generateOrderNumber(): string {
 
 export async function POST(req: NextRequest) {
   try {
+    await connectToDatabase();
     const auth = await getAuthenticatedUser(req);
     const body = await req.json();
 

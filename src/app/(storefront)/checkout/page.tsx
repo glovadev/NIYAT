@@ -34,6 +34,19 @@ interface SavedAddress {
   isDefault: boolean;
 }
 
+async function safeJsonFetch(url: string, init?: RequestInit) {
+  const res = await fetch(url, init);
+  const text = await res.text();
+  try {
+    const data = JSON.parse(text);
+    return { ok: res.ok, status: res.status, data };
+  } catch {
+    throw new Error(
+      `Server returned an error (${res.status}). If the issue persists, please redeploy on Vercel to ensure the latest API handlers are active.`
+    );
+  }
+}
+
 export default function CheckoutPage() {
   const router = useRouter();
   const { items, clearCart } = useCart();
@@ -143,7 +156,7 @@ export default function CheckoutPage() {
     setCouponMsg(null);
 
     try {
-      const res = await fetch("/api/coupons/validate", {
+      const { ok, data } = await safeJsonFetch("/api/coupons/validate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -152,8 +165,7 @@ export default function CheckoutPage() {
         }),
       });
 
-      const data = await res.json();
-      if (data.success && data.data?.valid) {
+      if (ok && data.success && data.data?.valid) {
         setAppliedCoupon(data.data.code);
         setCouponDiscount(data.data.discountPaise);
         setCouponMsg({ text: `Coupon applied: ${formatPaise(data.data.discountPaise)} saved!`, isError: false });
@@ -204,15 +216,14 @@ export default function CheckoutPage() {
       };
 
       // 1. Create order
-      const orderRes = await fetch("/api/orders", {
+      const { ok: orderOk, data: orderData } = await safeJsonFetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(orderPayload),
       });
 
-      const orderData = await orderRes.json();
-      if (!orderRes.ok || !orderData.success) {
-        throw new Error(orderData.error?.message || "Failed to create order");
+      if (!orderOk || !orderData.success) {
+        throw new Error(orderData?.error?.message || "Failed to create order");
       }
 
       const { orderId, orderNumber, guestOrderToken } = orderData.data;
@@ -230,15 +241,14 @@ export default function CheckoutPage() {
         headers["x-guest-order-token"] = guestOrderToken;
       }
 
-      const createPaymentRes = await fetch("/api/payments/razorpay/create-order", {
+      const { ok: paymentOk, data: paymentData } = await safeJsonFetch("/api/payments/razorpay/create-order", {
         method: "POST",
         headers,
         body: JSON.stringify({ orderId }),
       });
 
-      const paymentData = await createPaymentRes.json();
-      if (!createPaymentRes.ok || !paymentData.success) {
-        throw new Error(paymentData.error?.message || "Failed to initialize payment gateway");
+      if (!paymentOk || !paymentData.success) {
+        throw new Error(paymentData?.error?.message || "Failed to initialize payment gateway");
       }
 
       const {
@@ -344,7 +354,7 @@ export default function CheckoutPage() {
       headers["x-guest-order-token"] = guestOrderToken;
     }
 
-    const verifyRes = await fetch("/api/payments/razorpay/verify", {
+    const { ok: verifyOk, data: verifyData } = await safeJsonFetch("/api/payments/razorpay/verify", {
       method: "POST",
       headers,
       body: JSON.stringify({
@@ -355,9 +365,8 @@ export default function CheckoutPage() {
       }),
     });
 
-    const verifyData = await verifyRes.json();
-    if (!verifyRes.ok || !verifyData.success) {
-      throw new Error(verifyData.error?.message || "Payment verification failed");
+    if (!verifyOk || !verifyData.success) {
+      throw new Error(verifyData?.error?.message || "Payment verification failed");
     }
 
     setPaymentModalOpen(false);
