@@ -45,12 +45,17 @@ export default async function HomePage() {
             title: b.title || "",
             description: b.subtitle || "",
             imageUrl: b.image?.url || "/images/hero-woman.jpg",
+            mobileImageUrl:
+              b.mobileImage?.url && b.mobileImage.url.trim()
+                ? b.mobileImage.url.trim()
+                : undefined,
             imageAlt: b.image?.alt || b.title || "NIYAT Luxury Skincare",
             targetUrl: b.targetUrl || "/shop",
             textShadow: b.textShadow || "CRISP",
             textSize: b.textSize || "LG",
             textColor: b.textColor || "DARK",
             textBackdrop: b.textBackdrop || "FROSTED_LIGHT",
+            mobileFit: b.mobileFit || "CONTAIN",
           };
         })
       : [

@@ -12,12 +12,14 @@ const updateBannerSchema = z.object({
   subtitle: z.string().max(300).optional().nullable(),
   imageUrl: z.string().min(1).optional(),
   imageAlt: z.string().optional(),
+  mobileImageUrl: z.string().optional().nullable(),
   targetUrl: z.string().min(1).optional(),
   placement: z.enum(["HOME_HERO", "HOME_PROMO", "CATEGORY"]).optional(),
   textShadow: z.enum(["NONE", "SOFT", "CRISP", "STRONG"]).optional(),
   textSize: z.enum(["MD", "LG", "XL"]).optional(),
   textColor: z.enum(["DARK", "LIGHT", "GOLD"]).optional(),
   textBackdrop: z.enum(["FROSTED_LIGHT", "FROSTED_DARK", "SUBTLE_GRADIENT", "NONE"]).optional(),
+  mobileFit: z.enum(["CONTAIN", "COVER"]).optional(),
   sortOrder: z.number().int().optional(),
   status: z.enum(["ACTIVE", "DRAFT", "ARCHIVED"]).optional(),
 });
@@ -43,50 +45,79 @@ export async function PATCH(
       );
     }
 
-    const banner = await Banner.findById(bannerId);
-    if (!banner) {
-      return apiError("NOT_FOUND", "Banner not found", 404);
-    }
-
     const {
       title,
       subtitle,
       imageUrl,
       imageAlt,
+      mobileImageUrl,
       targetUrl,
       placement,
       textShadow,
       textSize,
       textColor,
       textBackdrop,
+      mobileFit,
       sortOrder,
       status,
     } = parsed.data;
 
-    if (title !== undefined) banner.title = title || "";
-    if (subtitle !== undefined) banner.subtitle = subtitle || "";
-    if (imageUrl !== undefined) {
-      banner.image.url = imageUrl;
-      if (imageAlt !== undefined) banner.image.alt = imageAlt;
-    } else if (imageAlt !== undefined) {
-      banner.image.alt = imageAlt;
-    }
-    if (targetUrl !== undefined) banner.targetUrl = targetUrl;
-    if (placement !== undefined) banner.placement = placement;
-    if (textShadow !== undefined) banner.textShadow = textShadow;
-    if (textSize !== undefined) banner.textSize = textSize;
-    if (textColor !== undefined) banner.textColor = textColor;
-    if (textBackdrop !== undefined) banner.textBackdrop = textBackdrop;
-    if (sortOrder !== undefined) banner.sortOrder = sortOrder;
-    if (status !== undefined) banner.status = status;
+    const updatePayload: Record<string, any> = {};
 
-    await banner.save();
+    if (title !== undefined) updatePayload.title = title || "";
+    if (subtitle !== undefined) updatePayload.subtitle = subtitle || "";
+    if (imageUrl !== undefined) {
+      updatePayload.image = {
+        url: imageUrl,
+        publicId: `banner_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+        alt: imageAlt || title || "NIYAT Hero Banner",
+      };
+    } else if (imageAlt !== undefined) {
+      updatePayload["image.alt"] = imageAlt;
+    }
+
+    if (mobileImageUrl !== undefined) {
+      if (mobileImageUrl && typeof mobileImageUrl === "string" && mobileImageUrl.trim()) {
+        updatePayload.mobileImage = {
+          url: mobileImageUrl.trim(),
+          publicId: `banner_mob_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+          alt: imageAlt || title || "NIYAT Hero Banner Mobile",
+        };
+      } else {
+        updatePayload.mobileImage = {
+          url: "",
+          publicId: "",
+          alt: "",
+        };
+      }
+    }
+
+    if (targetUrl !== undefined) updatePayload.targetUrl = targetUrl;
+    if (placement !== undefined) updatePayload.placement = placement;
+    if (textShadow !== undefined) updatePayload.textShadow = textShadow;
+    if (textSize !== undefined) updatePayload.textSize = textSize;
+    if (textColor !== undefined) updatePayload.textColor = textColor;
+    if (textBackdrop !== undefined) updatePayload.textBackdrop = textBackdrop;
+    if (mobileFit !== undefined) updatePayload.mobileFit = mobileFit;
+    if (sortOrder !== undefined) updatePayload.sortOrder = sortOrder;
+    if (status !== undefined) updatePayload.status = status;
+
+    const banner = await Banner.findByIdAndUpdate(
+      bannerId,
+      { $set: updatePayload },
+      { new: true }
+    ).lean();
+
+    if (!banner) {
+      return apiError("NOT_FOUND", "Banner not found", 404);
+    }
 
     return apiSuccess({
       id: String(banner._id),
       title: banner.title,
       subtitle: banner.subtitle,
       image: banner.image,
+      mobileImage: banner.mobileImage,
       targetUrl: banner.targetUrl,
       status: banner.status,
       message: "Banner updated successfully",

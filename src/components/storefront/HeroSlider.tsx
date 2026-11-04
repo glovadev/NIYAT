@@ -6,10 +6,6 @@ import Link from "next/link";
 import {
   ChevronLeft,
   ChevronRight,
-  ArrowRight,
-  Leaf,
-  FlaskConical,
-  Heart,
   Crown,
   Sparkles,
   ShieldCheck,
@@ -21,12 +17,14 @@ export interface HeroSlide {
   title?: string;
   description?: string;
   imageUrl: string;
+  mobileImageUrl?: string;
   imageAlt?: string;
   targetUrl: string;
   textShadow?: "NONE" | "SOFT" | "CRISP" | "STRONG";
   textSize?: "MD" | "LG" | "XL";
   textColor?: "DARK" | "LIGHT" | "GOLD";
   textBackdrop?: "FROSTED_LIGHT" | "FROSTED_DARK" | "SUBTLE_GRADIENT" | "NONE";
+  mobileFit?: "CONTAIN" | "COVER";
 }
 
 interface HeroSliderProps {
@@ -110,7 +108,7 @@ export function HeroSlider({ slides }: HeroSliderProps) {
   return (
     <>
       <div
-        className="relative w-full overflow-hidden bg-gradient-to-r from-[#F9F5EC] via-[#F4ECE1] to-[#F9F5EC] border-b border-[#D4AF37]/30 group"
+        className="relative w-full overflow-hidden bg-gradient-to-r from-[#F9F5EC] via-[#F4ECE1] to-[#F9F5EC] border-b border-[#D4AF37]/30 group aspect-[16/9] sm:aspect-[3/1]"
         onMouseEnter={() => setIsPaused(true)}
         onMouseLeave={() => setIsPaused(false)}
         onTouchStart={handleTouchStart}
@@ -123,184 +121,95 @@ export function HeroSlider({ slides }: HeroSliderProps) {
           style={{ transform: `translateX(-${currentIndex * 100}%)` }}
         >
           {activeSlides.map((slide, idx) => {
-            const hasContent = Boolean(
-              (slide.title && slide.title.trim()) ||
-              (slide.description && slide.description.trim())
-            );
-
-            // Text styling classes
-            const shadowClass =
-              slide.textShadow === "STRONG"
-                ? "drop-shadow-[0_4px_12px_rgba(0,0,0,0.65)]"
-                : slide.textShadow === "SOFT"
-                ? "drop-shadow-[0_1px_3px_rgba(0,0,0,0.2)]"
-                : slide.textShadow === "NONE"
-                ? ""
-                : "drop-shadow-[0_2px_5px_rgba(0,0,0,0.35)]"; // Default CRISP
-
-            const titleSizeClass =
-              slide.textSize === "XL"
-                ? "text-2xl sm:text-5xl lg:text-[66px] font-black leading-[1.08]"
-                : slide.textSize === "MD"
-                ? "text-lg sm:text-3xl lg:text-4xl font-bold leading-[1.15]"
-                : "text-xl sm:text-4xl lg:text-[54px] font-bold leading-[1.12]"; // Default LG
-
-            const descSizeClass =
-              slide.textSize === "XL"
-                ? "text-xs sm:text-base lg:text-lg"
-                : slide.textSize === "MD"
-                ? "text-[11px] sm:text-xs lg:text-sm"
-                : "text-[11px] sm:text-sm lg:text-base"; // Default LG
-
-            const isDarkBackdrop = slide.textBackdrop === "FROSTED_DARK";
-
-            const titleColorClass =
-              slide.textColor === "LIGHT" || isDarkBackdrop
-                ? "text-white drop-shadow-[0_2px_6px_rgba(0,0,0,0.6)]"
-                : slide.textColor === "GOLD"
-                ? "text-transparent bg-clip-text bg-gradient-to-r from-[#D4AF37] via-[#FCF6BA] to-[#B38728] drop-shadow-[0_2px_6px_rgba(0,0,0,0.4)]"
-                : "text-[#061B14]"; // Default DARK
-
-            const descColorClass =
-              slide.textColor === "LIGHT" || isDarkBackdrop
-                ? "text-[#FCF6BA]/90 font-medium"
-                : "text-[#0D2B24] font-medium";
-
-            const backdropCardClass =
-              slide.textBackdrop === "FROSTED_DARK"
-                ? "bg-[#061B14]/85 sm:bg-[#061B14]/90 backdrop-blur-md p-4 sm:p-7 lg:p-8 rounded-2xl sm:rounded-3xl border border-[#D4AF37]/50 shadow-2xl"
-                : slide.textBackdrop === "SUBTLE_GRADIENT"
-                ? "p-2 sm:p-4"
-                : slide.textBackdrop === "NONE"
-                ? "p-2 sm:p-4"
-                : "bg-[#FFFEFC]/88 sm:bg-[#FFFEFC]/92 backdrop-blur-md p-4 sm:p-7 lg:p-8 rounded-2xl sm:rounded-3xl border border-[#D4AF37]/35 shadow-[0_12px_40px_rgba(10,38,29,0.12)]"; // Default FROSTED_LIGHT
-
             return (
               <div
                 key={slide.id || idx}
-                className="relative w-full min-w-full flex-shrink-0 h-[260px] sm:h-[400px] md:h-[500px] lg:h-[640px] flex items-center"
+                className="relative w-full min-w-full flex-shrink-0 h-full flex items-center"
               >
-                {/* 1. Full-Bleed 100% Width Image */}
-                <div className="absolute inset-0 z-0 w-full h-full">
-                  {!hasContent ? (
-                    <Link
-                      href={slide.targetUrl || "/shop"}
-                      className="relative block w-full h-full cursor-pointer"
-                      title={slide.imageAlt || "View Collection"}
-                    >
-                      <Image
-                        src={slide.imageUrl}
-                        alt={slide.imageAlt || "NIYAT Luxury Skincare Banner"}
-                        fill
-                        priority={idx === 0}
-                        sizes="100vw"
-                        className="object-cover object-center"
-                      />
-                    </Link>
+                {/* 100% Full-Bleed Clean Image Banner */}
+                <Link
+                  href={slide.targetUrl || "/shop"}
+                  className="relative block w-full h-full cursor-pointer z-0 overflow-hidden"
+                  title={slide.imageAlt || "View Collection"}
+                >
+                  {slide.mobileImageUrl ? (
+                    <>
+                      {/* Mobile Dedicated Image */}
+                      <div className="block sm:hidden relative w-full h-full">
+                        <Image
+                          src={slide.mobileImageUrl}
+                          alt={slide.imageAlt || "NIYAT Luxury Skincare Banner Mobile"}
+                          fill
+                          priority={idx === 0}
+                          sizes="100vw"
+                          className={
+                            slide.mobileFit === "CONTAIN"
+                              ? "object-contain object-center"
+                              : "object-cover object-center"
+                          }
+                        />
+                      </div>
+                      {/* Desktop Image (3:1 Panoramic Zero Cropping with Ambient Luxury Glow) */}
+                      <div className="hidden sm:block relative w-full h-full">
+                        {/* Ambient luxury blurred glow behind banner */}
+                        <div className="absolute inset-0 overflow-hidden" aria-hidden="true">
+                          <Image
+                            src={slide.imageUrl}
+                            alt=""
+                            fill
+                            className="object-cover blur-2xl opacity-35 scale-105"
+                          />
+                        </div>
+                        <Image
+                          src={slide.imageUrl}
+                          alt={slide.imageAlt || "NIYAT Luxury Skincare Banner"}
+                          fill
+                          priority={idx === 0}
+                          sizes="100vw"
+                          className="object-contain object-center"
+                        />
+                      </div>
+                    </>
                   ) : (
                     <>
-                      <Image
-                        src={slide.imageUrl}
-                        alt={slide.imageAlt || slide.title || "NIYAT Luxury Skincare"}
-                        fill
-                        priority={idx === 0}
-                        sizes="100vw"
-                        className="object-cover object-right sm:object-center lg:object-right"
-                      />
-                      {/* Optional subtle gradient for edge-blending */}
-                      {slide.textBackdrop === "SUBTLE_GRADIENT" && (
-                        <div className="absolute inset-0 bg-gradient-to-r from-[#F9F5EC] via-[#F9F5EC]/75 to-transparent max-w-2xl pointer-events-none" />
-                      )}
+                      {/* Mobile Dedicated View */}
+                      <div className="block sm:hidden relative w-full h-full">
+                        <Image
+                          src={slide.imageUrl}
+                          alt={slide.imageAlt || "NIYAT Luxury Skincare Banner"}
+                          fill
+                          priority={idx === 0}
+                          sizes="100vw"
+                          className={
+                            slide.mobileFit === "CONTAIN"
+                              ? "object-contain object-center"
+                              : "object-cover object-center"
+                          }
+                        />
+                      </div>
+                      {/* Desktop View (3:1 Panoramic Zero Cropping with Ambient Luxury Glow) */}
+                      <div className="hidden sm:block relative w-full h-full">
+                        {/* Ambient luxury blurred glow behind banner */}
+                        <div className="absolute inset-0 overflow-hidden" aria-hidden="true">
+                          <Image
+                            src={slide.imageUrl}
+                            alt=""
+                            fill
+                            className="object-cover blur-2xl opacity-35 scale-105"
+                          />
+                        </div>
+                        <Image
+                          src={slide.imageUrl}
+                          alt={slide.imageAlt || "NIYAT Luxury Skincare Banner"}
+                          fill
+                          priority={idx === 0}
+                          sizes="100vw"
+                          className="object-contain object-center"
+                        />
+                      </div>
                     </>
                   )}
-                </div>
-
-                {/* 2. Container Aligned Content Overlay (Only rendered if title/description exist) */}
-                {hasContent && (
-                  <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full py-4 sm:py-8 lg:py-16 flex flex-col justify-center h-full">
-                    <div className={`max-w-[85%] sm:max-w-xl space-y-2 sm:space-y-4 lg:space-y-5 transition-all ${backdropCardClass}`}>
-                      
-                      {/* Eyebrow with UAE royal crown & gold accent */}
-                      <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#D4AF37]/15 border border-[#D4AF37]/35 shadow-xs w-fit">
-                        <Crown className="w-3.5 h-3.5 text-[#A5833F]" />
-                        <span className="text-[9px] sm:text-xs font-bold tracking-[0.25em] text-[#8F6B20] uppercase">
-                          {slide.eyebrow || "DUBAI ROYAL BOTANICALS • 24K RADIANCE"}
-                        </span>
-                      </div>
-
-                      {/* Heading */}
-                      {slide.title && (
-                        <h1 className={`font-serif tracking-tight ${titleSizeClass} ${titleColorClass} ${shadowClass}`}>
-                          {slide.title.includes(",") ? (
-                            <>
-                              {slide.title.split(",")[0]} <br className="sm:hidden" />
-                              <span className="font-serif font-bold text-[#153D32]">
-                                {slide.title.split(",")[1]}
-                              </span>
-                            </>
-                          ) : (
-                            slide.title
-                          )}
-                        </h1>
-                      )}
-
-                      {/* Description */}
-                      {slide.description && (
-                        <p className={`leading-snug sm:leading-relaxed max-w-md line-clamp-3 sm:line-clamp-none ${descSizeClass} ${descColorClass} ${shadowClass}`}>
-                          {slide.description}
-                        </p>
-                      )}
-
-                      {/* CTA Buttons */}
-                      <div className="flex flex-wrap items-center gap-2.5 pt-1 sm:pt-2">
-                        <Link
-                          href={slide.targetUrl || "/shop"}
-                          className="inline-flex items-center justify-center gap-2 px-4 py-2 sm:px-8 sm:py-3.5 rounded-full bg-gradient-to-r from-[#0C2920] to-[#153D32] hover:from-[#061510] hover:to-[#0C2920] text-[#F4E8C1] border border-[#D4AF37]/50 font-bold text-[11px] sm:text-sm tracking-wide shadow-lg shadow-[#D4AF37]/15 hover:shadow-xl transition-all active:scale-95 group"
-                        >
-                          <span>Explore Collection</span>
-                          <ArrowRight className="w-3.5 h-3.5 text-[#D4AF37] group-hover:translate-x-0.5 transition-transform" />
-                        </Link>
-
-                        <Link
-                          href="/shop"
-                          className="hidden sm:inline-flex items-center justify-center px-6 py-3.5 rounded-full bg-white/80 hover:bg-white text-[#153D32] border border-[#D4AF37]/40 font-semibold text-xs sm:text-sm tracking-wide shadow-xs transition-all"
-                        >
-                          View Rituals
-                        </Link>
-                      </div>
-
-                      {/* Three Benefit Indicators - Visible on Tablet and Desktop */}
-                      <div className="hidden sm:grid pt-3 sm:pt-4 border-t border-[#D4AF37]/25 grid-cols-3 gap-2 sm:gap-4 max-w-md">
-                        <div className="flex flex-col items-center sm:items-start text-center sm:text-left space-y-1">
-                          <div className="w-8 h-8 rounded-full border border-[#D4AF37]/40 bg-[#FBF8F2] flex items-center justify-center shadow-xs">
-                            <Crown className="w-3.5 h-3.5 text-[#D4AF37]" />
-                          </div>
-                          <span className="text-[10px] sm:text-xs font-semibold text-[#172723] leading-tight">
-                            Royal Saffron Elixir
-                          </span>
-                        </div>
-
-                        <div className="flex flex-col items-center sm:items-start text-center sm:text-left space-y-1">
-                          <div className="w-8 h-8 rounded-full border border-[#D4AF37]/40 bg-[#FBF8F2] flex items-center justify-center shadow-xs">
-                            <ShieldCheck className="w-3.5 h-3.5 text-[#D4AF37]" />
-                          </div>
-                          <span className="text-[10px] sm:text-xs font-semibold text-[#172723] leading-tight">
-                            Certified Derma GCC
-                          </span>
-                        </div>
-
-                        <div className="flex flex-col items-center sm:items-start text-center sm:text-left space-y-1">
-                          <div className="w-8 h-8 rounded-full border border-[#D4AF37]/40 bg-[#FBF8F2] flex items-center justify-center shadow-xs">
-                            <Sparkles className="w-3.5 h-3.5 text-[#D4AF37]" />
-                          </div>
-                          <span className="text-[10px] sm:text-xs font-semibold text-[#172723] leading-tight">
-                            24K Gold Radiance
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
+                </Link>
               </div>
             );
           })}

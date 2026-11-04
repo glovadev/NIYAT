@@ -8,12 +8,18 @@ export interface IBanner extends Document {
     publicId: string;
     alt: string;
   };
+  mobileImage?: {
+    url: string;
+    publicId?: string;
+    alt?: string;
+  };
   placement: "HOME_HERO" | "HOME_PROMO" | "CATEGORY";
   targetUrl: string;
   textShadow?: "NONE" | "SOFT" | "CRISP" | "STRONG";
   textSize?: "MD" | "LG" | "XL";
   textColor?: "DARK" | "LIGHT" | "GOLD";
   textBackdrop?: "FROSTED_LIGHT" | "FROSTED_DARK" | "SUBTLE_GRADIENT" | "NONE";
+  mobileFit?: "CONTAIN" | "COVER";
   startsAt?: Date;
   endsAt?: Date;
   sortOrder: number;
@@ -29,6 +35,11 @@ const BannerSchema = new Schema<IBanner>(
     image: {
       url: { type: String, required: true },
       publicId: { type: String, required: true },
+      alt: { type: String, default: "" },
+    },
+    mobileImage: {
+      url: { type: String, default: "" },
+      publicId: { type: String, default: "" },
       alt: { type: String, default: "" },
     },
     placement: {
@@ -58,6 +69,11 @@ const BannerSchema = new Schema<IBanner>(
       enum: ["FROSTED_LIGHT", "FROSTED_DARK", "SUBTLE_GRADIENT", "NONE"],
       default: "FROSTED_LIGHT",
     },
+    mobileFit: {
+      type: String,
+      enum: ["CONTAIN", "COVER"],
+      default: "CONTAIN",
+    },
     startsAt: { type: Date },
     endsAt: { type: Date },
     sortOrder: { type: Number, default: 0 },
@@ -70,10 +86,14 @@ const BannerSchema = new Schema<IBanner>(
   },
   {
     timestamps: true,
+    strict: false,
   }
 );
 
 BannerSchema.index({ status: 1, placement: 1, sortOrder: 1 });
 
-export const Banner: Model<IBanner> =
-  mongoose.models.Banner || mongoose.model<IBanner>("Banner", BannerSchema);
+if (mongoose.models && mongoose.models.Banner) {
+  delete (mongoose.models as Record<string, unknown>).Banner;
+}
+
+export const Banner: Model<IBanner> = mongoose.model<IBanner>("Banner", BannerSchema);

@@ -24,6 +24,7 @@ import {
   Moon,
   Crown,
   ArrowRight,
+  Image as ImageIcon,
 } from "lucide-react";
 import { ImageUploader } from "@/components/admin/ImageUploader";
 
@@ -36,12 +37,18 @@ interface AdminBannerItem {
     publicId: string;
     alt: string;
   };
+  mobileImage?: {
+    url: string;
+    publicId?: string;
+    alt?: string;
+  };
   targetUrl: string;
   placement: "HOME_HERO" | "HOME_PROMO" | "CATEGORY";
   textShadow?: "NONE" | "SOFT" | "CRISP" | "STRONG";
   textSize?: "MD" | "LG" | "XL";
   textColor?: "DARK" | "LIGHT" | "GOLD";
   textBackdrop?: "FROSTED_LIGHT" | "FROSTED_DARK" | "SUBTLE_GRADIENT" | "NONE";
+  mobileFit?: "CONTAIN" | "COVER";
   sortOrder: number;
   status: "ACTIVE" | "DRAFT" | "ARCHIVED";
   createdAt: string;
@@ -71,6 +78,7 @@ export default function AdminBannersPage() {
   const [formTitle, setFormTitle] = useState("");
   const [formSubtitle, setFormSubtitle] = useState("");
   const [formImageUrl, setFormImageUrl] = useState("");
+  const [formMobileImageUrl, setFormMobileImageUrl] = useState("");
   const [formImageAlt, setFormImageAlt] = useState("");
   const [formTargetUrl, setFormTargetUrl] = useState("/products/");
   const [formSelectedProductSlug, setFormSelectedProductSlug] = useState("");
@@ -82,6 +90,7 @@ export default function AdminBannersPage() {
   const [formTextSize, setFormTextSize] = useState<"MD" | "LG" | "XL">("LG");
   const [formTextColor, setFormTextColor] = useState<"DARK" | "LIGHT" | "GOLD">("DARK");
   const [formTextBackdrop, setFormTextBackdrop] = useState<"FROSTED_LIGHT" | "FROSTED_DARK" | "SUBTLE_GRADIENT" | "NONE">("FROSTED_LIGHT");
+  const [formMobileFit, setFormMobileFit] = useState<"CONTAIN" | "COVER">("CONTAIN");
   const [previewDevice, setPreviewDevice] = useState<"DESKTOP" | "MOBILE">("DESKTOP");
 
   const adminFetch = (url: string, options: RequestInit = {}) => {
@@ -141,6 +150,7 @@ export default function AdminBannersPage() {
     setFormTitle("");
     setFormSubtitle("");
     setFormImageUrl("");
+    setFormMobileImageUrl("");
     setFormImageAlt("");
     setFormTargetUrl("/products/");
     setFormSelectedProductSlug("");
@@ -150,6 +160,7 @@ export default function AdminBannersPage() {
     setFormTextSize("LG");
     setFormTextColor("DARK");
     setFormTextBackdrop("FROSTED_LIGHT");
+    setFormMobileFit("CONTAIN");
     setPreviewDevice("DESKTOP");
     setModalError(null);
     setModalOpen(true);
@@ -160,6 +171,7 @@ export default function AdminBannersPage() {
     setFormTitle(banner.title);
     setFormSubtitle(banner.subtitle || "");
     setFormImageUrl(banner.image.url);
+    setFormMobileImageUrl(banner.mobileImage?.url || "");
     setFormImageAlt(banner.image.alt || "");
     setFormTargetUrl(banner.targetUrl);
     setFormSortOrder(String(banner.sortOrder));
@@ -168,8 +180,8 @@ export default function AdminBannersPage() {
     setFormTextSize(banner.textSize || "LG");
     setFormTextColor(banner.textColor || "DARK");
     setFormTextBackdrop(banner.textBackdrop || "FROSTED_LIGHT");
+    setFormMobileFit(banner.mobileFit || "CONTAIN");
     setPreviewDevice("DESKTOP");
-
     // Match if it points to a product slug
     const matched = products.find((p) => `/products/${p.slug}` === banner.targetUrl);
     setFormSelectedProductSlug(matched ? matched.slug : "CUSTOM");
@@ -219,12 +231,14 @@ export default function AdminBannersPage() {
             title: formTitle.trim(),
             subtitle: formSubtitle.trim() || null,
             imageUrl: formImageUrl.trim(),
+            mobileImageUrl: formMobileImageUrl.trim() || null,
             imageAlt: formImageAlt.trim() || formTitle.trim() || "NIYAT Hero Slide",
             targetUrl: formTargetUrl.trim(),
             textShadow: formTextShadow,
             textSize: formTextSize,
             textColor: formTextColor,
             textBackdrop: formTextBackdrop,
+            mobileFit: formMobileFit,
             sortOrder,
             status: formStatus,
           }),
@@ -243,6 +257,7 @@ export default function AdminBannersPage() {
             title: formTitle.trim(),
             subtitle: formSubtitle.trim() || undefined,
             imageUrl: formImageUrl.trim(),
+            mobileImageUrl: formMobileImageUrl.trim() || undefined,
             imageAlt: formImageAlt.trim() || formTitle.trim() || "NIYAT Hero Slide",
             targetUrl: formTargetUrl.trim(),
             placement: "HOME_HERO",
@@ -250,6 +265,7 @@ export default function AdminBannersPage() {
             textSize: formTextSize,
             textColor: formTextColor,
             textBackdrop: formTextBackdrop,
+            mobileFit: formMobileFit,
             sortOrder,
             status: formStatus,
           }),
@@ -378,7 +394,7 @@ export default function AdminBannersPage() {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="border-b border-slate-800 bg-slate-900/60 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
-                  <th className="py-3.5 px-6">Slide Showcase</th>
+                  <th className="py-3.5 px-6">Imagery (Desktop & Mobile)</th>
                   <th className="py-3.5 px-6">Title & Subtitle</th>
                   <th className="py-3.5 px-6">Attached Product / Target Link</th>
                   <th className="py-3.5 px-6">Order</th>
@@ -389,16 +405,46 @@ export default function AdminBannersPage() {
               <tbody className="divide-y divide-slate-800/60 text-xs">
                 {banners.map((b) => (
                   <tr key={b.id} className="hover:bg-slate-900/40 transition">
-                    {/* Image Preview */}
+                    {/* Image Preview: Desktop & Mobile */}
                     <td className="py-4 px-6">
-                      <div className="relative w-20 h-14 rounded-xl bg-slate-800 border border-slate-700 overflow-hidden shrink-0 shadow-sm">
-                        <Image
-                          src={b.image.url}
-                          alt={b.image.alt || b.title}
-                          fill
-                          sizes="80px"
-                          className="object-cover"
-                        />
+                      <div className="flex items-center gap-3">
+                        {/* Desktop Image */}
+                        <div>
+                          <div className="relative w-20 h-10 rounded-lg bg-slate-800 border border-slate-700 overflow-hidden shrink-0 shadow-sm" title="Desktop 3:1 Banner">
+                            <Image
+                              src={b.image.url}
+                              alt={b.image.alt || b.title}
+                              fill
+                              sizes="80px"
+                              className="object-cover"
+                            />
+                          </div>
+                          <span className="text-[9px] text-slate-400 font-medium block text-center mt-0.5">
+                            🖥️ Desktop
+                          </span>
+                        </div>
+
+                        {/* Mobile Image */}
+                        <div>
+                          {b.mobileImage?.url ? (
+                            <div className="relative w-8 h-12 rounded-lg bg-slate-800 border border-amber-400/50 overflow-hidden shrink-0 shadow-sm ring-1 ring-amber-400/20" title="Dedicated Mobile Portrait Banner">
+                              <Image
+                                src={b.mobileImage.url}
+                                alt="Mobile Banner"
+                                fill
+                                sizes="32px"
+                                className="object-cover"
+                              />
+                            </div>
+                          ) : (
+                            <div className="w-8 h-12 rounded-lg bg-slate-900/90 border border-dashed border-slate-700 flex flex-col items-center justify-center text-[7px] text-slate-500 text-center px-0.5" title="Uses Desktop image on phones">
+                              Auto
+                            </div>
+                          )}
+                          <span className="text-[9px] text-slate-400 font-medium block text-center mt-0.5">
+                            📱 Mobile
+                          </span>
+                        </div>
                       </div>
                     </td>
 
@@ -572,239 +618,168 @@ export default function AdminBannersPage() {
                     </div>
                   </div>
 
-                  {/* Image Uploader */}
-                  <div>
-                    <ImageUploader
-                      value={formImageUrl}
-                      onChange={(url) => {
-                        setFormImageUrl(url);
-                        if (modalError) setModalError(null);
-                      }}
-                      folder="hero_banners"
-                      label="Hero Banner Image *"
-                      aspectHint="Edge-to-edge format (Recommended: 1920x1080 or 16:9)"
-                    />
+                  {/* Image Uploaders Section with Dedicated Desktop & Mobile Tabs */}
+                  <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3">
+                    {/* Mode Navigation Tabs */}
+                    <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                      <div>
+                        <span className="font-semibold text-white text-xs flex items-center gap-1.5">
+                          <ImageIcon className="w-4 h-4 text-amber-400" />
+                          Banner Imagery (Desktop & Mobile)
+                        </span>
+                        <p className="text-[11px] text-slate-400 mt-0.5">
+                          Upload separate images tailored for widescreen computers and vertical smartphones.
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setPreviewDevice("DESKTOP")}
+                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
+                            previewDevice === "DESKTOP"
+                              ? "bg-amber-400 text-slate-950 shadow-xs"
+                              : "bg-slate-900 text-slate-400 hover:text-white border border-slate-800"
+                          }`}
+                        >
+                          <Monitor className="w-3.5 h-3.5" />
+                          <span>Preview Desktop</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setPreviewDevice("MOBILE")}
+                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
+                            previewDevice === "MOBILE"
+                              ? "bg-amber-400 text-slate-950 shadow-xs"
+                              : "bg-slate-900 text-slate-400 hover:text-white border border-slate-800"
+                          }`}
+                        >
+                          <Smartphone className="w-3.5 h-3.5" />
+                          <span>Preview Mobile</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* 1. DESKTOP IMAGE UPLOADER */}
+                    <div className="space-y-2.5 p-3.5 rounded-xl bg-slate-900/90 border border-slate-800">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-semibold text-slate-200 flex items-center gap-1.5">
+                          <Monitor className="w-4 h-4 text-amber-400" />
+                          🖥️ 1. Desktop Banner Image (3:1 Widescreen) *
+                        </span>
+                        <span className="text-[10px] text-amber-400 font-medium bg-amber-400/10 px-2 py-0.5 rounded-md border border-amber-400/20">
+                          Desktop PCs & Laptops • 1920×640
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-400 leading-relaxed">
+                        Displayed on desktop PCs, laptops, and wide monitors.
+                      </p>
+
+                      <ImageUploader
+                        value={formImageUrl}
+                        onChange={(url) => {
+                          setFormImageUrl(url);
+                          setPreviewDevice("DESKTOP");
+                          if (modalError) setModalError(null);
+                        }}
+                        folder="hero_banners"
+                        label="Select or Upload Desktop Image"
+                        aspectHint="Recommended: 1920x640 or 2100x700 (3:1 Panoramic format, Max 1 MB)"
+                      />
+                    </div>
+
+                    {/* 2. MOBILE IMAGE UPLOADER */}
+                    <div className="space-y-2.5 p-3.5 rounded-xl bg-amber-400/[0.03] border border-amber-400/30">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-semibold text-white flex items-center gap-1.5">
+                          <Smartphone className="w-4 h-4 text-amber-400" />
+                          📱 2. Mobile Banner Image (Separate Smartphone View)
+                        </span>
+                        {formMobileImageUrl ? (
+                          <span className="text-[10px] text-emerald-400 font-medium bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/30 flex items-center gap-1">
+                            <CheckCircle2 className="w-3 h-3" />
+                            Mobile Image Active
+                          </span>
+                        ) : (
+                          <span className="text-[10px] text-slate-400 font-medium bg-slate-800 px-2 py-0.5 rounded-md border border-slate-700">
+                            Optional • Fallback to Desktop
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[11px] text-slate-300 leading-relaxed">
+                        Displayed on mobile phones. Upload a vertical portrait image (Recommended: 3:4 or 9:16, e.g. 1086×1448 or 1080×1920).
+                      </p>
+
+                      <ImageUploader
+                        value={formMobileImageUrl}
+                        onChange={(url) => {
+                          setFormMobileImageUrl(url);
+                          setPreviewDevice("MOBILE");
+                        }}
+                        folder="hero_banners"
+                        label="Select or Upload Mobile Image"
+                        aspectHint="Recommended: 1086x1448 or 1080x1920 (Portrait format, Max 1 MB)"
+                      />
+
+                      {formMobileImageUrl && (
+                        <div className="flex items-center justify-between pt-1 text-xs">
+                          <span className="text-[11px] text-emerald-400 flex items-center gap-1">
+                            ✓ Mobile shoppers will see this dedicated portrait graphic.
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setFormMobileImageUrl("")}
+                            className="text-[11px] text-rose-400 hover:text-rose-300 underline font-medium"
+                          >
+                            Remove mobile image
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
 
-                  {/* Title & Subtitle */}
+                  {/* Banner Title / Admin Reference */}
                   <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3">
                     <div className="flex items-center justify-between border-b border-slate-800 pb-2">
                       <span className="font-semibold text-white text-xs flex items-center gap-1.5">
                         <Type className="w-4 h-4 text-amber-400" />
-                        Text Overlay & Headlines
+                        Slide Title & Label
                       </span>
-                      <span className="text-[10px] text-amber-400/90 font-medium">
-                        Optional (Leave blank for Image-Only)
+                      <span className="text-[10px] text-emerald-400 font-medium">
+                        Pure Image Banner
                       </span>
                     </div>
 
-                    <div className="space-y-3">
-                      <div>
-                        <label className="block text-slate-300 font-medium mb-1 flex items-center justify-between">
-                          <span>Slide Headline / Title</span>
-                          <span className="text-[10px] text-slate-400">Comma adds split styling</span>
-                        </label>
-                        <input
-                          type="text"
-                          value={formTitle}
-                          onChange={(e) => setFormTitle(e.target.value)}
-                          placeholder="e.g. Whitening Cream, Royal Radiance"
-                          className="w-full bg-slate-900 border border-slate-700 focus:border-amber-400 rounded-xl px-3.5 py-2 text-white placeholder-slate-500 outline-none"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-slate-300 font-medium mb-1">
-                          Subtitle / Paragraph Description
-                        </label>
-                        <textarea
-                          rows={2}
-                          value={formSubtitle}
-                          onChange={(e) => setFormSubtitle(e.target.value)}
-                          placeholder="Signature botanical radiance formulation with 24-hour nourishment..."
-                          className="w-full bg-slate-900 border border-slate-700 focus:border-amber-400 rounded-xl px-3.5 py-2 text-white placeholder-slate-500 outline-none resize-none"
-                        />
-                      </div>
+                    <div>
+                      <label className="block text-slate-300 font-medium mb-1 flex items-center justify-between">
+                        <span>Slide Title / Identification</span>
+                        <span className="text-[10px] text-slate-400">For admin reference & image alt</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={formTitle}
+                        onChange={(e) => setFormTitle(e.target.value)}
+                        placeholder="e.g. Whitening Cream Royal Radiance Hero"
+                        className="w-full bg-slate-900 border border-slate-700 focus:border-amber-400 rounded-xl px-3.5 py-2 text-white placeholder-slate-500 outline-none"
+                      />
                     </div>
 
-                    {!formTitle.trim() && !formSubtitle.trim() && (
-                      <div className="p-2.5 rounded-lg bg-amber-400/10 border border-amber-400/25 flex items-center gap-2 text-[11px] text-amber-300">
-                        <Sparkles className="w-3.5 h-3.5 shrink-0 text-amber-400" />
-                        <span>
-                          <strong>Image-Only Slide:</strong> Since headline & paragraph are empty, this slide will display your image full-bleed without text overlays.
-                        </span>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Visual Typography & Contrast Controls (When Text is Present) */}
-                  {(formTitle.trim() || formSubtitle.trim()) && (
-                    <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-4">
-                      <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-                        <span className="font-semibold text-amber-400 text-xs flex items-center gap-1.5">
-                          <Crown className="w-3.5 h-3.5" />
-                          Eye-Catching Legibility & Contrast Styling
-                        </span>
-                        <span className="text-[10px] text-emerald-400 font-medium">Live Applied</span>
-                      </div>
-
-                      {/* 1. Heading Size Control */}
-                      <div>
-                        <label className="block text-slate-300 font-medium mb-1.5">
-                          1. Headline Font Size
-                        </label>
-                        <div className="grid grid-cols-3 gap-2">
-                          <button
-                            type="button"
-                            onClick={() => setFormTextSize("MD")}
-                            className={`py-2 px-2.5 rounded-xl border text-center transition font-semibold ${
-                              formTextSize === "MD"
-                                ? "bg-amber-400/15 border-amber-400 text-amber-300 shadow-xs"
-                                : "bg-slate-900 border-slate-800 text-slate-400 hover:text-white"
-                            }`}
-                          >
-                            <span className="block text-xs">Medium (MD)</span>
-                            <span className="block text-[10px] text-slate-500 font-normal">Compact</span>
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => setFormTextSize("LG")}
-                            className={`py-2 px-2.5 rounded-xl border text-center transition font-semibold ${
-                              formTextSize === "LG"
-                                ? "bg-amber-400/15 border-amber-400 text-amber-300 shadow-xs"
-                                : "bg-slate-900 border-slate-800 text-slate-400 hover:text-white"
-                            }`}
-                          >
-                            <span className="block text-xs">Large (LG) ⭐</span>
-                            <span className="block text-[10px] text-slate-500 font-normal">Recommended</span>
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => setFormTextSize("XL")}
-                            className={`py-2 px-2.5 rounded-xl border text-center transition font-semibold ${
-                              formTextSize === "XL"
-                                ? "bg-amber-400/15 border-amber-400 text-amber-300 shadow-xs"
-                                : "bg-slate-900 border-slate-800 text-slate-400 hover:text-white"
-                            }`}
-                          >
-                            <span className="block text-xs">Majestic (XL)</span>
-                            <span className="block text-[10px] text-slate-500 font-normal">Maximum Impact</span>
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* 2. Text Shadow Intensity */}
-                      <div>
-                        <label className="block text-slate-300 font-medium mb-1.5">
-                          2. Text Shadow / 3D Pop
-                        </label>
-                        <div className="grid grid-cols-4 gap-2">
-                          {[
-                            { id: "NONE", label: "None", sub: "Flat" },
-                            { id: "SOFT", label: "Soft Glow", sub: "Subtle" },
-                            { id: "CRISP", label: "Crisp ⭐", sub: "High Contrast" },
-                            { id: "STRONG", label: "Strong", sub: "Deep 3D" },
-                          ].map((item) => (
-                            <button
-                              key={item.id}
-                              type="button"
-                              onClick={() => setFormTextShadow(item.id as any)}
-                              className={`py-1.5 px-2 rounded-xl border text-center transition font-medium ${
-                                formTextShadow === item.id
-                                  ? "bg-amber-400/15 border-amber-400 text-amber-300 shadow-xs"
-                                  : "bg-slate-900 border-slate-800 text-slate-400 hover:text-white"
-                              }`}
-                            >
-                              <span className="block text-xs font-semibold">{item.label}</span>
-                              <span className="block text-[9px] text-slate-500">{item.sub}</span>
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* 3. Text Tone & Color */}
-                      <div>
-                        <label className="block text-slate-300 font-medium mb-1.5">
-                          3. Text Tone / Color
-                        </label>
-                        <div className="grid grid-cols-3 gap-2">
-                          <button
-                            type="button"
-                            onClick={() => setFormTextColor("DARK")}
-                            className={`py-2 px-2.5 rounded-xl border text-center transition font-semibold ${
-                              formTextColor === "DARK"
-                                ? "bg-amber-400/15 border-amber-400 text-amber-300 shadow-xs"
-                                : "bg-slate-900 border-slate-800 text-slate-400 hover:text-white"
-                            }`}
-                          >
-                            <span className="block text-xs">Deep Emerald</span>
-                            <span className="block text-[10px] text-slate-500 font-normal">Best on Light Photos</span>
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => setFormTextColor("LIGHT")}
-                            className={`py-2 px-2.5 rounded-xl border text-center transition font-semibold ${
-                              formTextColor === "LIGHT"
-                                ? "bg-amber-400/15 border-amber-400 text-amber-300 shadow-xs"
-                                : "bg-slate-900 border-slate-800 text-slate-400 hover:text-white"
-                            }`}
-                          >
-                            <span className="block text-xs">Crisp White</span>
-                            <span className="block text-[10px] text-slate-500 font-normal">Best on Dark Photos</span>
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => setFormTextColor("GOLD")}
-                            className={`py-2 px-2.5 rounded-xl border text-center transition font-semibold ${
-                              formTextColor === "GOLD"
-                                ? "bg-amber-400/15 border-amber-400 text-amber-300 shadow-xs"
-                                : "bg-slate-900 border-slate-800 text-slate-400 hover:text-white"
-                            }`}
-                          >
-                            <span className="block text-xs">24K Royal Gold</span>
-                            <span className="block text-[10px] text-slate-500 font-normal">Metallic Shimmer</span>
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* 4. Text Legibility Card (Frosted Glass) */}
-                      <div>
-                        <label className="block text-slate-300 font-medium mb-1.5">
-                          4. Legibility Backing Card (Frosted Glass)
-                        </label>
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                          {[
-                            { id: "FROSTED_LIGHT", label: "Ivory Glass ⭐", sub: "Recommended" },
-                            { id: "FROSTED_DARK", label: "Night Velvet", sub: "Deep Contrast" },
-                            { id: "SUBTLE_GRADIENT", label: "Soft Gradient", sub: "Edge Blend" },
-                            { id: "NONE", label: "No Card", sub: "Transparent" },
-                          ].map((item) => (
-                            <button
-                              key={item.id}
-                              type="button"
-                              onClick={() => setFormTextBackdrop(item.id as any)}
-                              className={`py-2 px-2 rounded-xl border text-center transition font-medium ${
-                                formTextBackdrop === item.id
-                                  ? "bg-amber-400/15 border-amber-400 text-amber-300 shadow-xs"
-                                  : "bg-slate-900 border-slate-800 text-slate-400 hover:text-white"
-                              }`}
-                            >
-                              <span className="block text-xs font-semibold">{item.label}</span>
-                              <span className="block text-[9px] text-slate-500">{item.sub}</span>
-                            </button>
-                          ))}
-                        </div>
-                        <p className="text-[10px] text-slate-400 mt-1.5">
-                          💡 <strong>Ivory Glass</strong> adds a gentle luxury frosted glass backdrop under your text so it is never washed out by bright white or busy product jars!
+                    <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/25 flex items-start gap-2.5 text-[11px] text-emerald-300">
+                      <Sparkles className="w-4 h-4 shrink-0 text-emerald-400 mt-0.5" />
+                      <div className="space-y-0.5">
+                        <p className="font-semibold text-white">Clean Graphic Banner (No Text Overlay)</p>
+                        <p className="text-slate-300 leading-relaxed">
+                          Your uploaded image will be displayed completely clean and unblocked on both Desktop and Mobile. All headlines, product bottles, and offers designed into the image will be 100% visible and fully clickable to your redirect target.
                         </p>
                       </div>
-
                     </div>
-                  )}
+                  </div>
+
+                  {/* Sort Order & Status */}
+
+
+
+
 
                   {/* Sort Order & Status */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -884,18 +859,27 @@ export default function AdminBannersPage() {
                   {/* Preview Container Frame */}
                   <div className="w-full flex items-center justify-center py-2 min-h-[300px]">
                     {previewDevice === "DESKTOP" ? (
-                      /* DESKTOP 16:9 PREVIEW FRAME */
-                      <div className="relative w-full aspect-[16/10] rounded-xl overflow-hidden border border-slate-700 bg-slate-900 shadow-xl flex items-center">
-                        {/* Background Image */}
-                        <div className="absolute inset-0">
+                      /* DESKTOP PREVIEW FRAME (3:1 PANORAMIC ZERO CROPPING) */
+                      <div className="relative w-full aspect-[3/1] rounded-xl overflow-hidden border border-slate-700 bg-slate-900 shadow-xl flex items-center justify-center">
+                        {/* Background Image: Ambient Blur + Zero Cropping */}
+                        <div className="absolute inset-0 overflow-hidden">
                           {formImageUrl ? (
-                            <Image
-                              src={formImageUrl}
-                              alt="Preview"
-                              fill
-                              className="object-cover object-center"
-                              unoptimized
-                            />
+                            <>
+                              <Image
+                                src={formImageUrl}
+                                alt="Ambient Glow"
+                                fill
+                                className="object-cover blur-xl opacity-35 scale-105"
+                                unoptimized
+                              />
+                              <Image
+                                src={formImageUrl}
+                                alt="Preview"
+                                fill
+                                className="object-contain object-center"
+                                unoptimized
+                              />
+                            </>
                           ) : (
                             <div className="w-full h-full bg-gradient-to-r from-amber-900/20 to-slate-900 flex items-center justify-center text-slate-600 text-xs">
                               Upload an image to preview
@@ -903,178 +887,89 @@ export default function AdminBannersPage() {
                           )}
                         </div>
 
-                        {/* If text is present, render card & text */}
-                        {(formTitle.trim() || formSubtitle.trim()) ? (
-                          <div className="relative z-10 p-3 sm:p-4 max-w-[85%]">
-                            <div
-                              className={`space-y-1.5 transition-all ${
-                                formTextBackdrop === "FROSTED_DARK"
-                                  ? "bg-[#061B14]/90 backdrop-blur-md p-3.5 rounded-2xl border border-[#D4AF37]/50 shadow-xl"
-                                  : formTextBackdrop === "SUBTLE_GRADIENT"
-                                  ? "p-2 bg-gradient-to-r from-[#FFFEFC]/95 to-transparent rounded-xl"
-                                  : formTextBackdrop === "NONE"
-                                  ? "p-1"
-                                  : "bg-[#FFFEFC]/90 backdrop-blur-md p-3.5 rounded-2xl border border-[#D4AF37]/40 shadow-xl"
-                              }`}
-                            >
-                              {/* Eyebrow */}
-                              <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#D4AF37]/15 border border-[#D4AF37]/35 w-fit">
-                                <Crown className="w-2.5 h-2.5 text-[#A5833F]" />
-                                <span className="text-[8px] font-bold tracking-widest text-[#8F6B20] uppercase">
-                                  DUBAI ROYAL BOTANICALS
-                                </span>
-                              </div>
-
-                              {/* Title */}
-                              {formTitle && (
-                                <h4
-                                  className={`font-serif tracking-tight leading-tight ${
-                                    formTextSize === "XL"
-                                      ? "text-lg font-black"
-                                      : formTextSize === "MD"
-                                      ? "text-sm font-bold"
-                                      : "text-base font-bold"
-                                  } ${
-                                    formTextColor === "LIGHT" || formTextBackdrop === "FROSTED_DARK"
-                                      ? "text-white"
-                                      : formTextColor === "GOLD"
-                                      ? "text-amber-500 font-extrabold"
-                                      : "text-[#061B14]"
-                                  } ${
-                                    formTextShadow === "STRONG"
-                                      ? "drop-shadow-[0_3px_8px_rgba(0,0,0,0.7)]"
-                                      : formTextShadow === "SOFT"
-                                      ? "drop-shadow-[0_1px_2px_rgba(0,0,0,0.2)]"
-                                      : formTextShadow === "NONE"
-                                      ? ""
-                                      : "drop-shadow-[0_2px_4px_rgba(0,0,0,0.35)]"
-                                  }`}
-                                >
-                                  {formTitle}
-                                </h4>
-                              )}
-
-                              {/* Subtitle */}
-                              {formSubtitle && (
-                                <p
-                                  className={`text-[9px] line-clamp-2 leading-relaxed ${
-                                    formTextColor === "LIGHT" || formTextBackdrop === "FROSTED_DARK"
-                                      ? "text-[#F4E8C1]/90"
-                                      : "text-[#0D2B24] font-medium"
-                                  }`}
-                                >
-                                  {formSubtitle}
-                                </p>
-                              )}
-
-                              {/* CTA Button preview */}
-                              <div className="pt-1 flex items-center gap-1.5">
-                                <span className="px-3 py-1 rounded-full bg-[#0C2920] text-[#F4E8C1] border border-[#D4AF37]/50 text-[9px] font-bold inline-flex items-center gap-1">
-                                  <span>Explore Collection</span>
-                                  <ArrowRight className="w-2.5 h-2.5 text-[#D4AF37]" />
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="absolute bottom-2 left-2 right-2 bg-black/70 backdrop-blur-xs text-center text-[10px] text-amber-300 py-1 rounded-lg border border-amber-400/30">
-                            🖼️ Image-Only Banner (Full Bleed - No Overlays)
-                          </div>
-                        )}
+                        {/* Clean Graphic indicator badge */}
+                        <div className="absolute bottom-2 right-2 bg-black/60 backdrop-blur-xs text-[10px] text-amber-300 px-2.5 py-1 rounded-lg border border-amber-400/30">
+                          ✨ 100% Totally Viewed on Desktop (Zero Cropping)
+                        </div>
                       </div>
                     ) : (
+
                       /* MOBILE SMARTPHONE MOCK FRAME */
-                      <div className="relative w-[230px] aspect-[9/16] rounded-[24px] border-4 border-slate-700 overflow-hidden bg-slate-900 shadow-2xl flex items-center justify-center">
-                        {/* Background Image */}
-                        <div className="absolute inset-0">
-                          {formImageUrl ? (
-                            <Image
-                              src={formImageUrl}
-                              alt="Mobile Preview"
-                              fill
-                              className="object-cover object-center"
-                              unoptimized
-                            />
+                      <div className="flex flex-col items-center">
+                        <div className="text-[10px] text-center mb-1.5 text-slate-400">
+                          {formMobileImageUrl ? (
+                            <span className="text-emerald-400 font-medium">✓ Dedicated Mobile Image Active</span>
+                          ) : formMobileFit === "CONTAIN" ? (
+                            <span className="text-amber-300 font-medium flex items-center justify-center gap-1">
+                              <Sparkles className="w-3 h-3 text-amber-400" />
+                              100% Desktop Image Totally Viewed (No Cropping)
+                            </span>
                           ) : (
-                            <div className="w-full h-full bg-slate-800 flex items-center justify-center text-slate-500 text-[10px] p-2 text-center">
-                              Upload image
-                            </div>
+                            <span className="text-slate-500">Desktop Image (Cover)</span>
                           )}
                         </div>
 
-                        {/* Mobile Text Card */}
-                        {(formTitle.trim() || formSubtitle.trim()) ? (
-                          <div className="relative z-10 p-2.5 w-[92%]">
-                            <div
-                              className={`space-y-1.5 transition-all ${
-                                formTextBackdrop === "FROSTED_DARK"
-                                  ? "bg-[#061B14]/92 backdrop-blur-md p-3 rounded-xl border border-[#D4AF37]/50 shadow-xl"
-                                  : formTextBackdrop === "SUBTLE_GRADIENT"
-                                  ? "p-2 bg-gradient-to-r from-[#FFFEFC]/95 to-transparent rounded-xl"
-                                  : formTextBackdrop === "NONE"
-                                  ? "p-1"
-                                  : "bg-[#FFFEFC]/92 backdrop-blur-md p-3 rounded-xl border border-[#D4AF37]/40 shadow-xl"
-                              }`}
-                            >
-                              <div className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-[#D4AF37]/15 border border-[#D4AF37]/35 w-fit">
-                                <Crown className="w-2 h-2 text-[#A5833F]" />
-                                <span className="text-[7px] font-bold tracking-wider text-[#8F6B20] uppercase">
-                                  DUBAI ROYAL
-                                </span>
+                        <div className="relative w-[230px] aspect-[9/16] rounded-[24px] border-4 border-slate-700 overflow-hidden bg-slate-900 shadow-2xl flex items-center justify-center">
+                          {/* Background Image: Supports Total View (Contain) with Luxury Ambient Glow or Full Bleed */}
+                          <div className="absolute inset-0 overflow-hidden">
+                            {(formMobileImageUrl || formImageUrl) ? (
+                              <>
+                                {formMobileFit === "CONTAIN" && (
+                                  <Image
+                                    src={formMobileImageUrl || formImageUrl}
+                                    alt="Ambient Glow"
+                                    fill
+                                    className="object-cover blur-xl opacity-35 scale-110"
+                                    unoptimized
+                                  />
+                                )}
+                                <Image
+                                  src={formMobileImageUrl || formImageUrl}
+                                  alt="Mobile Preview"
+                                  fill
+                                  className={
+                                    formMobileFit === "CONTAIN"
+                                      ? "object-contain object-center"
+                                      : "object-cover object-center"
+                                  }
+                                  unoptimized
+                                />
+                              </>
+                            ) : (
+                              <div className="w-full h-full bg-slate-800 flex items-center justify-center text-slate-500 text-[10px] p-2 text-center">
+                                Upload image
                               </div>
-
-                              {formTitle && (
-                                <h4
-                                  className={`font-serif tracking-tight leading-tight ${
-                                    formTextSize === "XL"
-                                      ? "text-sm font-black"
-                                      : "text-xs font-bold"
-                                  } ${
-                                    formTextColor === "LIGHT" || formTextBackdrop === "FROSTED_DARK"
-                                      ? "text-white"
-                                      : formTextColor === "GOLD"
-                                      ? "text-amber-500 font-extrabold"
-                                      : "text-[#061B14]"
-                                  } ${
-                                    formTextShadow === "STRONG"
-                                      ? "drop-shadow-[0_2px_6px_rgba(0,0,0,0.7)]"
-                                      : formTextShadow === "SOFT"
-                                      ? "drop-shadow-[0_1px_2px_rgba(0,0,0,0.2)]"
-                                      : formTextShadow === "NONE"
-                                      ? ""
-                                      : "drop-shadow-[0_2px_3px_rgba(0,0,0,0.35)]"
-                                  }`}
-                                >
-                                  {formTitle}
-                                </h4>
-                              )}
-
-                              {formSubtitle && (
-                                <p
-                                  className={`text-[8px] line-clamp-2 leading-tight ${
-                                    formTextColor === "LIGHT" || formTextBackdrop === "FROSTED_DARK"
-                                      ? "text-[#F4E8C1]/90"
-                                      : "text-[#0D2B24]"
-                                  }`}
-                                >
-                                  {formSubtitle}
-                                </p>
-                              )}
-
-                              <div className="pt-0.5">
-                                <span className="px-2 py-0.5 rounded-full bg-[#0C2920] text-[#F4E8C1] border border-[#D4AF37]/50 text-[8px] font-bold inline-flex items-center gap-1">
-                                  Explore <ArrowRight className="w-2 h-2 text-[#D4AF37]" />
-                                </span>
-                              </div>
-                            </div>
+                            )}
                           </div>
+
+                        {/* Clean Graphic indicator badge */}
+                        <div className="absolute bottom-2 left-2 right-2 bg-black/65 backdrop-blur-xs text-center text-[9px] text-amber-300 py-1 rounded-md border border-amber-400/25">
+                          ✨ Clean Graphic Banner
+                        </div>
+                      </div>
+
+                      {/* Direct Status directly under phone mockup */}
+                      <div className="mt-3 w-full flex flex-col items-center gap-1.5">
+                        <span className="text-xs text-amber-300 font-medium">
+                          {formMobileImageUrl ? "📱 Previewing Dedicated Mobile Image" : "📱 Previewing with Desktop Image Fallback"}
+                        </span>
+
+                        {formMobileImageUrl ? (
+                          <button
+                            type="button"
+                            onClick={() => setFormMobileImageUrl("")}
+                            className="text-[11px] text-rose-400 hover:text-rose-300 underline font-medium transition"
+                          >
+                            Remove Mobile Image (Use Desktop Fallback)
+                          </button>
                         ) : (
-                          <div className="absolute bottom-2 left-2 right-2 bg-black/75 text-center text-[9px] text-amber-300 py-1 rounded-md">
-                            Full-Bleed Image
-                          </div>
+                          <p className="text-[10px] text-slate-400 text-center">
+                            Currently previewing with desktop image as fallback.
+                          </p>
                         )}
                       </div>
-                    )}
+                    </div>
+                  )}
                   </div>
 
                   {/* Simulation Helper Note */}
