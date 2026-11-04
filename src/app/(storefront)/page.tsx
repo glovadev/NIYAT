@@ -47,6 +47,10 @@ export default async function HomePage() {
             imageUrl: b.image?.url || "/images/hero-woman.jpg",
             imageAlt: b.image?.alt || b.title || "NIYAT Luxury Skincare",
             targetUrl: b.targetUrl || "/shop",
+            textShadow: b.textShadow || "CRISP",
+            textSize: b.textSize || "LG",
+            textColor: b.textColor || "DARK",
+            textBackdrop: b.textBackdrop || "FROSTED_LIGHT",
           };
         })
       : [
@@ -59,6 +63,10 @@ export default async function HomePage() {
             imageUrl: "/images/hero-woman.jpg",
             imageAlt: "NIYAT Natural Skincare Radiance Range",
             targetUrl: "/shop",
+            textShadow: "CRISP",
+            textSize: "LG",
+            textColor: "DARK",
+            textBackdrop: "FROSTED_LIGHT",
           },
         ];
 

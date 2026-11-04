@@ -14,6 +14,10 @@ const updateBannerSchema = z.object({
   imageAlt: z.string().optional(),
   targetUrl: z.string().min(1).optional(),
   placement: z.enum(["HOME_HERO", "HOME_PROMO", "CATEGORY"]).optional(),
+  textShadow: z.enum(["NONE", "SOFT", "CRISP", "STRONG"]).optional(),
+  textSize: z.enum(["MD", "LG", "XL"]).optional(),
+  textColor: z.enum(["DARK", "LIGHT", "GOLD"]).optional(),
+  textBackdrop: z.enum(["FROSTED_LIGHT", "FROSTED_DARK", "SUBTLE_GRADIENT", "NONE"]).optional(),
   sortOrder: z.number().int().optional(),
   status: z.enum(["ACTIVE", "DRAFT", "ARCHIVED"]).optional(),
 });
@@ -51,6 +55,10 @@ export async function PATCH(
       imageAlt,
       targetUrl,
       placement,
+      textShadow,
+      textSize,
+      textColor,
+      textBackdrop,
       sortOrder,
       status,
     } = parsed.data;
@@ -65,6 +73,10 @@ export async function PATCH(
     }
     if (targetUrl !== undefined) banner.targetUrl = targetUrl;
     if (placement !== undefined) banner.placement = placement;
+    if (textShadow !== undefined) banner.textShadow = textShadow;
+    if (textSize !== undefined) banner.textSize = textSize;
+    if (textColor !== undefined) banner.textColor = textColor;
+    if (textBackdrop !== undefined) banner.textBackdrop = textBackdrop;
     if (sortOrder !== undefined) banner.sortOrder = sortOrder;
     if (status !== undefined) banner.status = status;
 

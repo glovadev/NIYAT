@@ -17,6 +17,13 @@ import {
   CheckCircle2,
   Link as LinkIcon,
   Eye,
+  Monitor,
+  Smartphone,
+  Type,
+  Sun,
+  Moon,
+  Crown,
+  ArrowRight,
 } from "lucide-react";
 import { ImageUploader } from "@/components/admin/ImageUploader";
 
@@ -31,6 +38,10 @@ interface AdminBannerItem {
   };
   targetUrl: string;
   placement: "HOME_HERO" | "HOME_PROMO" | "CATEGORY";
+  textShadow?: "NONE" | "SOFT" | "CRISP" | "STRONG";
+  textSize?: "MD" | "LG" | "XL";
+  textColor?: "DARK" | "LIGHT" | "GOLD";
+  textBackdrop?: "FROSTED_LIGHT" | "FROSTED_DARK" | "SUBTLE_GRADIENT" | "NONE";
   sortOrder: number;
   status: "ACTIVE" | "DRAFT" | "ARCHIVED";
   createdAt: string;
@@ -65,6 +76,13 @@ export default function AdminBannersPage() {
   const [formSelectedProductSlug, setFormSelectedProductSlug] = useState("");
   const [formSortOrder, setFormSortOrder] = useState("0");
   const [formStatus, setFormStatus] = useState<"ACTIVE" | "DRAFT">("ACTIVE");
+
+  // Visual Styling & Typography Customization
+  const [formTextShadow, setFormTextShadow] = useState<"NONE" | "SOFT" | "CRISP" | "STRONG">("CRISP");
+  const [formTextSize, setFormTextSize] = useState<"MD" | "LG" | "XL">("LG");
+  const [formTextColor, setFormTextColor] = useState<"DARK" | "LIGHT" | "GOLD">("DARK");
+  const [formTextBackdrop, setFormTextBackdrop] = useState<"FROSTED_LIGHT" | "FROSTED_DARK" | "SUBTLE_GRADIENT" | "NONE">("FROSTED_LIGHT");
+  const [previewDevice, setPreviewDevice] = useState<"DESKTOP" | "MOBILE">("DESKTOP");
 
   const adminFetch = (url: string, options: RequestInit = {}) => {
     const headers = new Headers(options.headers || {});
@@ -128,6 +146,11 @@ export default function AdminBannersPage() {
     setFormSelectedProductSlug("");
     setFormSortOrder(String(banners.length));
     setFormStatus("ACTIVE");
+    setFormTextShadow("CRISP");
+    setFormTextSize("LG");
+    setFormTextColor("DARK");
+    setFormTextBackdrop("FROSTED_LIGHT");
+    setPreviewDevice("DESKTOP");
     setModalError(null);
     setModalOpen(true);
   };
@@ -141,6 +164,11 @@ export default function AdminBannersPage() {
     setFormTargetUrl(banner.targetUrl);
     setFormSortOrder(String(banner.sortOrder));
     setFormStatus(banner.status === "ACTIVE" ? "ACTIVE" : "DRAFT");
+    setFormTextShadow(banner.textShadow || "CRISP");
+    setFormTextSize(banner.textSize || "LG");
+    setFormTextColor(banner.textColor || "DARK");
+    setFormTextBackdrop(banner.textBackdrop || "FROSTED_LIGHT");
+    setPreviewDevice("DESKTOP");
 
     // Match if it points to a product slug
     const matched = products.find((p) => `/products/${p.slug}` === banner.targetUrl);
@@ -193,6 +221,10 @@ export default function AdminBannersPage() {
             imageUrl: formImageUrl.trim(),
             imageAlt: formImageAlt.trim() || formTitle.trim() || "NIYAT Hero Slide",
             targetUrl: formTargetUrl.trim(),
+            textShadow: formTextShadow,
+            textSize: formTextSize,
+            textColor: formTextColor,
+            textBackdrop: formTextBackdrop,
             sortOrder,
             status: formStatus,
           }),
@@ -214,6 +246,10 @@ export default function AdminBannersPage() {
             imageAlt: formImageAlt.trim() || formTitle.trim() || "NIYAT Hero Slide",
             targetUrl: formTargetUrl.trim(),
             placement: "HOME_HERO",
+            textShadow: formTextShadow,
+            textSize: formTextSize,
+            textColor: formTextColor,
+            textBackdrop: formTextBackdrop,
             sortOrder,
             status: formStatus,
           }),
@@ -456,21 +492,28 @@ export default function AdminBannersPage() {
 
       {/* Add / Edit Slide Modal */}
       {modalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto">
-          <div className="relative w-full max-w-xl bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden my-8">
-            <div className="p-6 border-b border-slate-800 flex items-center justify-between">
-              <div className="flex items-center gap-2">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/85 backdrop-blur-sm overflow-y-auto">
+          <div className="relative w-full max-w-5xl bg-slate-900 border border-slate-800 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden my-4 sm:my-8 flex flex-col max-h-[92vh]">
+            
+            {/* Modal Header */}
+            <div className="p-4 sm:p-6 border-b border-slate-800 flex items-center justify-between shrink-0 bg-slate-900/90 backdrop-blur-md">
+              <div className="flex items-center gap-2.5">
                 <SlidersHorizontal className="w-5 h-5 text-amber-400" />
-                <h3 className="font-serif font-bold text-lg text-white">
-                  {editingBannerId ? "Edit Hero Slide" : "Add New Hero Slide"}
-                </h3>
+                <div>
+                  <h3 className="font-serif font-bold text-lg sm:text-xl text-white">
+                    {editingBannerId ? "Edit Hero Slide & Typography" : "Create New Hero Slide"}
+                  </h3>
+                  <p className="text-[11px] text-slate-400">
+                    Customize imagery, live typography, contrast shadow, and device previews.
+                  </p>
+                </div>
               </div>
               <button
                 type="button"
                 onClick={() => setModalOpen(false)}
-                className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition"
+                className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition"
               >
-                <X className="w-4 h-4" />
+                <X className="w-5 h-5" />
               </button>
             </div>
 
@@ -481,141 +524,576 @@ export default function AdminBannersPage() {
               </div>
             )}
 
-            <form onSubmit={handleFormSubmit} className="p-6 space-y-4 text-xs">
-              {/* Product Link Selector */}
-              <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2">
-                <label className="block text-amber-400 font-semibold text-xs flex items-center gap-1.5">
-                  <LinkIcon className="w-3.5 h-3.5" />
-                  Attach Product Link (Redirect Target) *
-                </label>
-                <p className="text-[11px] text-slate-400">
-                  Select a product from your catalog to automatically link this slide to its details page.
-                </p>
-
-                <select
-                  value={formSelectedProductSlug}
-                  onChange={(e) => handleProductSelect(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-700 focus:border-amber-400 rounded-xl px-3 py-2 text-white outline-none"
-                >
-                  <option value="">-- Choose a Product from Catalog --</option>
-                  {products.map((p) => (
-                    <option key={p.id} value={p.slug}>
-                      {p.name} ({p.sku})
-                    </option>
-                  ))}
-                  <option value="CUSTOM">Custom URL / Page Link</option>
-                </select>
-
-                <div>
-                  <label className="block text-slate-400 font-medium mb-1 mt-2">
-                    Exact Redirect URL Path
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={formTargetUrl}
-                    onChange={(e) => setFormTargetUrl(e.target.value)}
-                    placeholder="/products/whitening-cream"
-                    className="w-full bg-slate-900 border border-slate-700 focus:border-amber-400 rounded-xl px-3.5 py-2 text-white font-mono placeholder-slate-500 outline-none"
-                  />
-                </div>
-              </div>
-
-              {/* Title & Subtitle (Optional for Image-Only Banners) */}
-              <div className="space-y-2">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-slate-300 font-medium mb-1 flex items-center justify-between">
-                      <span>Slide Headline / Title</span>
-                      <span className="text-[10px] text-amber-400 font-normal">Optional</span>
+            {/* Modal Content: 2-Column Grid (Form on Left, Live Device Preview on Right) */}
+            <form onSubmit={handleFormSubmit} className="p-4 sm:p-6 overflow-y-auto flex-1">
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                
+                {/* ============================================================== */}
+                {/* LEFT COLUMN: FORM CONTROLS                                    */}
+                {/* ============================================================== */}
+                <div className="lg:col-span-7 space-y-4 text-xs">
+                  
+                  {/* Product Link Selector */}
+                  <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2">
+                    <label className="block text-amber-400 font-semibold text-xs flex items-center gap-1.5">
+                      <LinkIcon className="w-3.5 h-3.5" />
+                      Attach Product Link (Redirect Target) *
                     </label>
-                    <input
-                      type="text"
-                      value={formTitle}
-                      onChange={(e) => setFormTitle(e.target.value)}
-                      placeholder="Leave empty if text is on image"
-                      className="w-full bg-slate-800 border border-slate-700 focus:border-amber-400 rounded-xl px-3.5 py-2 text-white placeholder-slate-500 outline-none"
+                    <p className="text-[11px] text-slate-400">
+                      Select a product from your catalog to automatically link this slide to its details page.
+                    </p>
+
+                    <select
+                      value={formSelectedProductSlug}
+                      onChange={(e) => handleProductSelect(e.target.value)}
+                      className="w-full bg-slate-900 border border-slate-700 focus:border-amber-400 rounded-xl px-3 py-2 text-white outline-none"
+                    >
+                      <option value="">-- Choose a Product from Catalog --</option>
+                      {products.map((p) => (
+                        <option key={p.id} value={p.slug}>
+                          {p.name} ({p.sku})
+                        </option>
+                      ))}
+                      <option value="CUSTOM">Custom URL / Page Link</option>
+                    </select>
+
+                    <div>
+                      <label className="block text-slate-400 font-medium mb-1 mt-2">
+                        Exact Redirect URL Path
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={formTargetUrl}
+                        onChange={(e) => setFormTargetUrl(e.target.value)}
+                        placeholder="/products/whitening-cream"
+                        className="w-full bg-slate-900 border border-slate-700 focus:border-amber-400 rounded-xl px-3.5 py-2 text-white font-mono placeholder-slate-500 outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Image Uploader */}
+                  <div>
+                    <ImageUploader
+                      value={formImageUrl}
+                      onChange={(url) => {
+                        setFormImageUrl(url);
+                        if (modalError) setModalError(null);
+                      }}
+                      folder="hero_banners"
+                      label="Hero Banner Image *"
+                      aspectHint="Edge-to-edge format (Recommended: 1920x1080 or 16:9)"
                     />
                   </div>
 
-                  <div>
-                    <label className="block text-slate-300 font-medium mb-1 flex items-center justify-between">
-                      <span>Subtitle / Paragraph</span>
-                      <span className="text-[10px] text-amber-400 font-normal">Optional</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={formSubtitle}
-                      onChange={(e) => setFormSubtitle(e.target.value)}
-                      placeholder="Leave empty if text is on image"
-                      className="w-full bg-slate-800 border border-slate-700 focus:border-amber-400 rounded-xl px-3.5 py-2 text-white placeholder-slate-500 outline-none"
-                    />
+                  {/* Title & Subtitle */}
+                  <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3">
+                    <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                      <span className="font-semibold text-white text-xs flex items-center gap-1.5">
+                        <Type className="w-4 h-4 text-amber-400" />
+                        Text Overlay & Headlines
+                      </span>
+                      <span className="text-[10px] text-amber-400/90 font-medium">
+                        Optional (Leave blank for Image-Only)
+                      </span>
+                    </div>
+
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-slate-300 font-medium mb-1 flex items-center justify-between">
+                          <span>Slide Headline / Title</span>
+                          <span className="text-[10px] text-slate-400">Comma adds split styling</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={formTitle}
+                          onChange={(e) => setFormTitle(e.target.value)}
+                          placeholder="e.g. Whitening Cream, Royal Radiance"
+                          className="w-full bg-slate-900 border border-slate-700 focus:border-amber-400 rounded-xl px-3.5 py-2 text-white placeholder-slate-500 outline-none"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-slate-300 font-medium mb-1">
+                          Subtitle / Paragraph Description
+                        </label>
+                        <textarea
+                          rows={2}
+                          value={formSubtitle}
+                          onChange={(e) => setFormSubtitle(e.target.value)}
+                          placeholder="Signature botanical radiance formulation with 24-hour nourishment..."
+                          className="w-full bg-slate-900 border border-slate-700 focus:border-amber-400 rounded-xl px-3.5 py-2 text-white placeholder-slate-500 outline-none resize-none"
+                        />
+                      </div>
+                    </div>
+
+                    {!formTitle.trim() && !formSubtitle.trim() && (
+                      <div className="p-2.5 rounded-lg bg-amber-400/10 border border-amber-400/25 flex items-center gap-2 text-[11px] text-amber-300">
+                        <Sparkles className="w-3.5 h-3.5 shrink-0 text-amber-400" />
+                        <span>
+                          <strong>Image-Only Slide:</strong> Since headline & paragraph are empty, this slide will display your image full-bleed without text overlays.
+                        </span>
+                      </div>
+                    )}
                   </div>
+
+                  {/* Visual Typography & Contrast Controls (When Text is Present) */}
+                  {(formTitle.trim() || formSubtitle.trim()) && (
+                    <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-4">
+                      <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                        <span className="font-semibold text-amber-400 text-xs flex items-center gap-1.5">
+                          <Crown className="w-3.5 h-3.5" />
+                          Eye-Catching Legibility & Contrast Styling
+                        </span>
+                        <span className="text-[10px] text-emerald-400 font-medium">Live Applied</span>
+                      </div>
+
+                      {/* 1. Heading Size Control */}
+                      <div>
+                        <label className="block text-slate-300 font-medium mb-1.5">
+                          1. Headline Font Size
+                        </label>
+                        <div className="grid grid-cols-3 gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setFormTextSize("MD")}
+                            className={`py-2 px-2.5 rounded-xl border text-center transition font-semibold ${
+                              formTextSize === "MD"
+                                ? "bg-amber-400/15 border-amber-400 text-amber-300 shadow-xs"
+                                : "bg-slate-900 border-slate-800 text-slate-400 hover:text-white"
+                            }`}
+                          >
+                            <span className="block text-xs">Medium (MD)</span>
+                            <span className="block text-[10px] text-slate-500 font-normal">Compact</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => setFormTextSize("LG")}
+                            className={`py-2 px-2.5 rounded-xl border text-center transition font-semibold ${
+                              formTextSize === "LG"
+                                ? "bg-amber-400/15 border-amber-400 text-amber-300 shadow-xs"
+                                : "bg-slate-900 border-slate-800 text-slate-400 hover:text-white"
+                            }`}
+                          >
+                            <span className="block text-xs">Large (LG) ⭐</span>
+                            <span className="block text-[10px] text-slate-500 font-normal">Recommended</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => setFormTextSize("XL")}
+                            className={`py-2 px-2.5 rounded-xl border text-center transition font-semibold ${
+                              formTextSize === "XL"
+                                ? "bg-amber-400/15 border-amber-400 text-amber-300 shadow-xs"
+                                : "bg-slate-900 border-slate-800 text-slate-400 hover:text-white"
+                            }`}
+                          >
+                            <span className="block text-xs">Majestic (XL)</span>
+                            <span className="block text-[10px] text-slate-500 font-normal">Maximum Impact</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* 2. Text Shadow Intensity */}
+                      <div>
+                        <label className="block text-slate-300 font-medium mb-1.5">
+                          2. Text Shadow / 3D Pop
+                        </label>
+                        <div className="grid grid-cols-4 gap-2">
+                          {[
+                            { id: "NONE", label: "None", sub: "Flat" },
+                            { id: "SOFT", label: "Soft Glow", sub: "Subtle" },
+                            { id: "CRISP", label: "Crisp ⭐", sub: "High Contrast" },
+                            { id: "STRONG", label: "Strong", sub: "Deep 3D" },
+                          ].map((item) => (
+                            <button
+                              key={item.id}
+                              type="button"
+                              onClick={() => setFormTextShadow(item.id as any)}
+                              className={`py-1.5 px-2 rounded-xl border text-center transition font-medium ${
+                                formTextShadow === item.id
+                                  ? "bg-amber-400/15 border-amber-400 text-amber-300 shadow-xs"
+                                  : "bg-slate-900 border-slate-800 text-slate-400 hover:text-white"
+                              }`}
+                            >
+                              <span className="block text-xs font-semibold">{item.label}</span>
+                              <span className="block text-[9px] text-slate-500">{item.sub}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* 3. Text Tone & Color */}
+                      <div>
+                        <label className="block text-slate-300 font-medium mb-1.5">
+                          3. Text Tone / Color
+                        </label>
+                        <div className="grid grid-cols-3 gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setFormTextColor("DARK")}
+                            className={`py-2 px-2.5 rounded-xl border text-center transition font-semibold ${
+                              formTextColor === "DARK"
+                                ? "bg-amber-400/15 border-amber-400 text-amber-300 shadow-xs"
+                                : "bg-slate-900 border-slate-800 text-slate-400 hover:text-white"
+                            }`}
+                          >
+                            <span className="block text-xs">Deep Emerald</span>
+                            <span className="block text-[10px] text-slate-500 font-normal">Best on Light Photos</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => setFormTextColor("LIGHT")}
+                            className={`py-2 px-2.5 rounded-xl border text-center transition font-semibold ${
+                              formTextColor === "LIGHT"
+                                ? "bg-amber-400/15 border-amber-400 text-amber-300 shadow-xs"
+                                : "bg-slate-900 border-slate-800 text-slate-400 hover:text-white"
+                            }`}
+                          >
+                            <span className="block text-xs">Crisp White</span>
+                            <span className="block text-[10px] text-slate-500 font-normal">Best on Dark Photos</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => setFormTextColor("GOLD")}
+                            className={`py-2 px-2.5 rounded-xl border text-center transition font-semibold ${
+                              formTextColor === "GOLD"
+                                ? "bg-amber-400/15 border-amber-400 text-amber-300 shadow-xs"
+                                : "bg-slate-900 border-slate-800 text-slate-400 hover:text-white"
+                            }`}
+                          >
+                            <span className="block text-xs">24K Royal Gold</span>
+                            <span className="block text-[10px] text-slate-500 font-normal">Metallic Shimmer</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* 4. Text Legibility Card (Frosted Glass) */}
+                      <div>
+                        <label className="block text-slate-300 font-medium mb-1.5">
+                          4. Legibility Backing Card (Frosted Glass)
+                        </label>
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                          {[
+                            { id: "FROSTED_LIGHT", label: "Ivory Glass ⭐", sub: "Recommended" },
+                            { id: "FROSTED_DARK", label: "Night Velvet", sub: "Deep Contrast" },
+                            { id: "SUBTLE_GRADIENT", label: "Soft Gradient", sub: "Edge Blend" },
+                            { id: "NONE", label: "No Card", sub: "Transparent" },
+                          ].map((item) => (
+                            <button
+                              key={item.id}
+                              type="button"
+                              onClick={() => setFormTextBackdrop(item.id as any)}
+                              className={`py-2 px-2 rounded-xl border text-center transition font-medium ${
+                                formTextBackdrop === item.id
+                                  ? "bg-amber-400/15 border-amber-400 text-amber-300 shadow-xs"
+                                  : "bg-slate-900 border-slate-800 text-slate-400 hover:text-white"
+                              }`}
+                            >
+                              <span className="block text-xs font-semibold">{item.label}</span>
+                              <span className="block text-[9px] text-slate-500">{item.sub}</span>
+                            </button>
+                          ))}
+                        </div>
+                        <p className="text-[10px] text-slate-400 mt-1.5">
+                          💡 <strong>Ivory Glass</strong> adds a gentle luxury frosted glass backdrop under your text so it is never washed out by bright white or busy product jars!
+                        </p>
+                      </div>
+
+                    </div>
+                  )}
+
+                  {/* Sort Order & Status */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-slate-300 font-medium mb-1">
+                        Slide Sequence (Sort Order)
+                      </label>
+                      <input
+                        type="number"
+                        value={formSortOrder}
+                        onChange={(e) => setFormSortOrder(e.target.value)}
+                        placeholder="0"
+                        className="w-full bg-slate-800 border border-slate-700 focus:border-amber-400 rounded-xl px-3.5 py-2 text-white font-mono outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-slate-300 font-medium mb-1">
+                        Display Status
+                      </label>
+                      <select
+                        value={formStatus}
+                        onChange={(e) =>
+                          setFormStatus(e.target.value as "ACTIVE" | "DRAFT")
+                        }
+                        className="w-full bg-slate-800 border border-slate-700 focus:border-amber-400 rounded-xl px-3 py-2 text-white outline-none"
+                      >
+                        <option value="ACTIVE">ACTIVE (Display in Hero)</option>
+                        <option value="DRAFT">DRAFT (Hidden)</option>
+                      </select>
+                    </div>
+                  </div>
+
                 </div>
 
-                {/* Helpful status indicator */}
-                {!formTitle.trim() && !formSubtitle.trim() ? (
-                  <div className="p-2.5 rounded-xl bg-amber-400/10 border border-amber-400/25 flex items-center gap-2 text-[11px] text-amber-300">
-                    <Sparkles className="w-3.5 h-3.5 shrink-0 text-amber-400" />
+                {/* ============================================================== */}
+                {/* RIGHT COLUMN: LIVE INTERACTIVE PREVIEW (DESKTOP & MOBILE)     */}
+                {/* ============================================================== */}
+                <div className="lg:col-span-5 flex flex-col bg-slate-950 p-4 sm:p-5 rounded-2xl border border-slate-800 sticky top-2">
+                  
+                  {/* Viewport Switcher Toolbar */}
+                  <div className="flex items-center justify-between pb-3 border-b border-slate-800 mb-3">
+                    <div className="flex items-center gap-1.5">
+                      <Eye className="w-4 h-4 text-amber-400" />
+                      <span className="font-semibold text-white text-xs">Live Device Simulation</span>
+                    </div>
+
+                    <div className="flex items-center bg-slate-900 p-0.5 rounded-lg border border-slate-800">
+                      <button
+                        type="button"
+                        onClick={() => setPreviewDevice("DESKTOP")}
+                        className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-semibold transition ${
+                          previewDevice === "DESKTOP"
+                            ? "bg-amber-400 text-slate-950 shadow-xs"
+                            : "text-slate-400 hover:text-white"
+                        }`}
+                      >
+                        <Monitor className="w-3.5 h-3.5" />
+                        <span>Desktop</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setPreviewDevice("MOBILE")}
+                        className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-semibold transition ${
+                          previewDevice === "MOBILE"
+                            ? "bg-amber-400 text-slate-950 shadow-xs"
+                            : "text-slate-400 hover:text-white"
+                        }`}
+                      >
+                        <Smartphone className="w-3.5 h-3.5" />
+                        <span>Mobile</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Preview Container Frame */}
+                  <div className="w-full flex items-center justify-center py-2 min-h-[300px]">
+                    {previewDevice === "DESKTOP" ? (
+                      /* DESKTOP 16:9 PREVIEW FRAME */
+                      <div className="relative w-full aspect-[16/10] rounded-xl overflow-hidden border border-slate-700 bg-slate-900 shadow-xl flex items-center">
+                        {/* Background Image */}
+                        <div className="absolute inset-0">
+                          {formImageUrl ? (
+                            <Image
+                              src={formImageUrl}
+                              alt="Preview"
+                              fill
+                              className="object-cover object-center"
+                              unoptimized
+                            />
+                          ) : (
+                            <div className="w-full h-full bg-gradient-to-r from-amber-900/20 to-slate-900 flex items-center justify-center text-slate-600 text-xs">
+                              Upload an image to preview
+                            </div>
+                          )}
+                        </div>
+
+                        {/* If text is present, render card & text */}
+                        {(formTitle.trim() || formSubtitle.trim()) ? (
+                          <div className="relative z-10 p-3 sm:p-4 max-w-[85%]">
+                            <div
+                              className={`space-y-1.5 transition-all ${
+                                formTextBackdrop === "FROSTED_DARK"
+                                  ? "bg-[#061B14]/90 backdrop-blur-md p-3.5 rounded-2xl border border-[#D4AF37]/50 shadow-xl"
+                                  : formTextBackdrop === "SUBTLE_GRADIENT"
+                                  ? "p-2 bg-gradient-to-r from-[#FFFEFC]/95 to-transparent rounded-xl"
+                                  : formTextBackdrop === "NONE"
+                                  ? "p-1"
+                                  : "bg-[#FFFEFC]/90 backdrop-blur-md p-3.5 rounded-2xl border border-[#D4AF37]/40 shadow-xl"
+                              }`}
+                            >
+                              {/* Eyebrow */}
+                              <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#D4AF37]/15 border border-[#D4AF37]/35 w-fit">
+                                <Crown className="w-2.5 h-2.5 text-[#A5833F]" />
+                                <span className="text-[8px] font-bold tracking-widest text-[#8F6B20] uppercase">
+                                  DUBAI ROYAL BOTANICALS
+                                </span>
+                              </div>
+
+                              {/* Title */}
+                              {formTitle && (
+                                <h4
+                                  className={`font-serif tracking-tight leading-tight ${
+                                    formTextSize === "XL"
+                                      ? "text-lg font-black"
+                                      : formTextSize === "MD"
+                                      ? "text-sm font-bold"
+                                      : "text-base font-bold"
+                                  } ${
+                                    formTextColor === "LIGHT" || formTextBackdrop === "FROSTED_DARK"
+                                      ? "text-white"
+                                      : formTextColor === "GOLD"
+                                      ? "text-amber-500 font-extrabold"
+                                      : "text-[#061B14]"
+                                  } ${
+                                    formTextShadow === "STRONG"
+                                      ? "drop-shadow-[0_3px_8px_rgba(0,0,0,0.7)]"
+                                      : formTextShadow === "SOFT"
+                                      ? "drop-shadow-[0_1px_2px_rgba(0,0,0,0.2)]"
+                                      : formTextShadow === "NONE"
+                                      ? ""
+                                      : "drop-shadow-[0_2px_4px_rgba(0,0,0,0.35)]"
+                                  }`}
+                                >
+                                  {formTitle}
+                                </h4>
+                              )}
+
+                              {/* Subtitle */}
+                              {formSubtitle && (
+                                <p
+                                  className={`text-[9px] line-clamp-2 leading-relaxed ${
+                                    formTextColor === "LIGHT" || formTextBackdrop === "FROSTED_DARK"
+                                      ? "text-[#F4E8C1]/90"
+                                      : "text-[#0D2B24] font-medium"
+                                  }`}
+                                >
+                                  {formSubtitle}
+                                </p>
+                              )}
+
+                              {/* CTA Button preview */}
+                              <div className="pt-1 flex items-center gap-1.5">
+                                <span className="px-3 py-1 rounded-full bg-[#0C2920] text-[#F4E8C1] border border-[#D4AF37]/50 text-[9px] font-bold inline-flex items-center gap-1">
+                                  <span>Explore Collection</span>
+                                  <ArrowRight className="w-2.5 h-2.5 text-[#D4AF37]" />
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="absolute bottom-2 left-2 right-2 bg-black/70 backdrop-blur-xs text-center text-[10px] text-amber-300 py-1 rounded-lg border border-amber-400/30">
+                            🖼️ Image-Only Banner (Full Bleed - No Overlays)
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      /* MOBILE SMARTPHONE MOCK FRAME */
+                      <div className="relative w-[230px] aspect-[9/16] rounded-[24px] border-4 border-slate-700 overflow-hidden bg-slate-900 shadow-2xl flex items-center justify-center">
+                        {/* Background Image */}
+                        <div className="absolute inset-0">
+                          {formImageUrl ? (
+                            <Image
+                              src={formImageUrl}
+                              alt="Mobile Preview"
+                              fill
+                              className="object-cover object-center"
+                              unoptimized
+                            />
+                          ) : (
+                            <div className="w-full h-full bg-slate-800 flex items-center justify-center text-slate-500 text-[10px] p-2 text-center">
+                              Upload image
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Mobile Text Card */}
+                        {(formTitle.trim() || formSubtitle.trim()) ? (
+                          <div className="relative z-10 p-2.5 w-[92%]">
+                            <div
+                              className={`space-y-1.5 transition-all ${
+                                formTextBackdrop === "FROSTED_DARK"
+                                  ? "bg-[#061B14]/92 backdrop-blur-md p-3 rounded-xl border border-[#D4AF37]/50 shadow-xl"
+                                  : formTextBackdrop === "SUBTLE_GRADIENT"
+                                  ? "p-2 bg-gradient-to-r from-[#FFFEFC]/95 to-transparent rounded-xl"
+                                  : formTextBackdrop === "NONE"
+                                  ? "p-1"
+                                  : "bg-[#FFFEFC]/92 backdrop-blur-md p-3 rounded-xl border border-[#D4AF37]/40 shadow-xl"
+                              }`}
+                            >
+                              <div className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-[#D4AF37]/15 border border-[#D4AF37]/35 w-fit">
+                                <Crown className="w-2 h-2 text-[#A5833F]" />
+                                <span className="text-[7px] font-bold tracking-wider text-[#8F6B20] uppercase">
+                                  DUBAI ROYAL
+                                </span>
+                              </div>
+
+                              {formTitle && (
+                                <h4
+                                  className={`font-serif tracking-tight leading-tight ${
+                                    formTextSize === "XL"
+                                      ? "text-sm font-black"
+                                      : "text-xs font-bold"
+                                  } ${
+                                    formTextColor === "LIGHT" || formTextBackdrop === "FROSTED_DARK"
+                                      ? "text-white"
+                                      : formTextColor === "GOLD"
+                                      ? "text-amber-500 font-extrabold"
+                                      : "text-[#061B14]"
+                                  } ${
+                                    formTextShadow === "STRONG"
+                                      ? "drop-shadow-[0_2px_6px_rgba(0,0,0,0.7)]"
+                                      : formTextShadow === "SOFT"
+                                      ? "drop-shadow-[0_1px_2px_rgba(0,0,0,0.2)]"
+                                      : formTextShadow === "NONE"
+                                      ? ""
+                                      : "drop-shadow-[0_2px_3px_rgba(0,0,0,0.35)]"
+                                  }`}
+                                >
+                                  {formTitle}
+                                </h4>
+                              )}
+
+                              {formSubtitle && (
+                                <p
+                                  className={`text-[8px] line-clamp-2 leading-tight ${
+                                    formTextColor === "LIGHT" || formTextBackdrop === "FROSTED_DARK"
+                                      ? "text-[#F4E8C1]/90"
+                                      : "text-[#0D2B24]"
+                                  }`}
+                                >
+                                  {formSubtitle}
+                                </p>
+                              )}
+
+                              <div className="pt-0.5">
+                                <span className="px-2 py-0.5 rounded-full bg-[#0C2920] text-[#F4E8C1] border border-[#D4AF37]/50 text-[8px] font-bold inline-flex items-center gap-1">
+                                  Explore <ArrowRight className="w-2 h-2 text-[#D4AF37]" />
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="absolute bottom-2 left-2 right-2 bg-black/75 text-center text-[9px] text-amber-300 py-1 rounded-md">
+                            Full-Bleed Image
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Simulation Helper Note */}
+                  <div className="mt-2 text-[10px] text-slate-400 bg-slate-900/60 p-2.5 rounded-xl border border-slate-800">
+                    <p className="flex items-center gap-1 text-slate-300 font-medium mb-0.5">
+                      <Sparkles className="w-3 h-3 text-amber-400" />
+                      Live Customizer Active
+                    </p>
                     <span>
-                      <strong>Image-Only Slide Mode:</strong> Since title and subtitle are empty, this slide will display your banner image edge-to-edge without any text overlays or obscuring boxes.
+                      Adjust font size, shadow pop, and backing glass on the left — see the change immediately above in Desktop or Mobile mode.
                     </span>
                   </div>
-                ) : (
-                  <p className="text-[10px] text-slate-400">
-                    Text entered above will be rendered as an elegant royal overlay over the left side of the slide.
-                  </p>
-                )}
-              </div>
 
-              {/* Image Uploader (Firebase Cloud Storage - Max 1 MB) */}
-              <div>
-                <ImageUploader
-                  value={formImageUrl}
-                  onChange={(url) => {
-                    setFormImageUrl(url);
-                    if (modalError) setModalError(null);
-                  }}
-                  folder="hero_banners"
-                  label="Hero Banner Image *"
-                  aspectHint="Edge-to-edge format (Recommended: 1920x1080 or 16:9)"
-                />
-              </div>
-
-              {/* Sort Order & Status */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-slate-300 font-medium mb-1">
-                    Slide Sequence (Sort Order)
-                  </label>
-                  <input
-                    type="number"
-                    value={formSortOrder}
-                    onChange={(e) => setFormSortOrder(e.target.value)}
-                    placeholder="0"
-                    className="w-full bg-slate-800 border border-slate-700 focus:border-amber-400 rounded-xl px-3.5 py-2 text-white font-mono outline-none"
-                  />
                 </div>
 
-                <div>
-                  <label className="block text-slate-300 font-medium mb-1">
-                    Display Status
-                  </label>
-                  <select
-                    value={formStatus}
-                    onChange={(e) =>
-                      setFormStatus(e.target.value as "ACTIVE" | "DRAFT")
-                    }
-                    className="w-full bg-slate-800 border border-slate-700 focus:border-amber-400 rounded-xl px-3 py-2 text-white outline-none"
-                  >
-                    <option value="ACTIVE">ACTIVE (Display in Hero)</option>
-                    <option value="DRAFT">DRAFT (Hidden)</option>
-                  </select>
-                </div>
               </div>
 
               {/* Modal Actions */}
-              <div className="pt-4 border-t border-slate-800 flex items-center justify-end gap-3">
+              <div className="mt-6 pt-4 border-t border-slate-800 flex items-center justify-end gap-3 shrink-0">
                 <button
                   type="button"
                   onClick={() => setModalOpen(false)}
@@ -626,16 +1104,20 @@ export default function AdminBannersPage() {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="px-5 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-semibold shadow-md shadow-amber-400/20 transition disabled:opacity-50"
+                  className="px-6 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-semibold shadow-md shadow-amber-400/20 transition disabled:opacity-50 flex items-center gap-2"
                 >
-                  {submitting
-                    ? "Saving Slide..."
-                    : editingBannerId
-                    ? "Update Slide"
-                    : "Add Slide"}
+                  {submitting ? (
+                    <span>Saving...</span>
+                  ) : (
+                    <>
+                      <CheckCircle2 className="w-4 h-4" />
+                      <span>{editingBannerId ? "Save Slide Changes" : "Create Hero Slide"}</span>
+                    </>
+                  )}
                 </button>
               </div>
             </form>
+
           </div>
         </div>
       )}

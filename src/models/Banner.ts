@@ -10,6 +10,10 @@ export interface IBanner extends Document {
   };
   placement: "HOME_HERO" | "HOME_PROMO" | "CATEGORY";
   targetUrl: string;
+  textShadow?: "NONE" | "SOFT" | "CRISP" | "STRONG";
+  textSize?: "MD" | "LG" | "XL";
+  textColor?: "DARK" | "LIGHT" | "GOLD";
+  textBackdrop?: "FROSTED_LIGHT" | "FROSTED_DARK" | "SUBTLE_GRADIENT" | "NONE";
   startsAt?: Date;
   endsAt?: Date;
   sortOrder: number;
@@ -34,6 +38,26 @@ const BannerSchema = new Schema<IBanner>(
       index: true,
     },
     targetUrl: { type: String, default: "/shop", trim: true },
+    textShadow: {
+      type: String,
+      enum: ["NONE", "SOFT", "CRISP", "STRONG"],
+      default: "CRISP",
+    },
+    textSize: {
+      type: String,
+      enum: ["MD", "LG", "XL"],
+      default: "LG",
+    },
+    textColor: {
+      type: String,
+      enum: ["DARK", "LIGHT", "GOLD"],
+      default: "DARK",
+    },
+    textBackdrop: {
+      type: String,
+      enum: ["FROSTED_LIGHT", "FROSTED_DARK", "SUBTLE_GRADIENT", "NONE"],
+      default: "FROSTED_LIGHT",
+    },
     startsAt: { type: Date },
     endsAt: { type: Date },
     sortOrder: { type: Number, default: 0 },
