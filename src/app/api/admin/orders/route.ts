@@ -17,6 +17,7 @@ export async function GET(req: NextRequest) {
     const fulfilmentStatus = searchParams.get("fulfilmentStatus");
     const paymentStatus = searchParams.get("paymentStatus");
     const paymentMethod = searchParams.get("paymentMethod");
+    const orderType = searchParams.get("orderType"); // "DISTRIBUTOR" | "RETAIL" | "ALL"
     const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
     const limit = Math.min(50, Math.max(1, parseInt(searchParams.get("limit") || "20", 10)));
 
@@ -30,6 +31,15 @@ export async function GET(req: NextRequest) {
     }
     if (paymentMethod && paymentMethod !== "ALL") {
       query.paymentMethod = paymentMethod;
+    }
+    if (orderType === "DISTRIBUTOR") {
+      query.$or = [
+        { isDistributorOrder: true },
+        { orderNumber: { $regex: /^NIY-DIST-/, $options: "i" } },
+      ];
+    } else if (orderType === "RETAIL") {
+      query.isDistributorOrder = { $ne: true };
+      query.orderNumber = { $not: { $regex: /^NIY-DIST-/, $options: "i" } };
     }
     if (q) {
       query.$or = [
@@ -65,6 +75,8 @@ export async function GET(req: NextRequest) {
         fulfilmentStatus: o.fulfilmentStatus,
         carrier: o.shipment?.carrier || null,
         trackingNumber: o.shipment?.trackingNumber || null,
+        isDistributorOrder: Boolean(o.isDistributorOrder || o.orderNumber?.startsWith("NIY-DIST-")),
+        distributorInfo: o.distributorInfo || null,
       })),
       pagination: {
         page,

@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
+import { adminFetch } from "@/lib/api/admin-client";
 import {
   Boxes,
   Search,
@@ -55,12 +56,13 @@ export default function AdminInventoryPage() {
       if (lowStockOnly) params.set("lowStock", "true");
       if (searchQuery.trim()) params.set("q", searchQuery.trim());
 
-      const res = await fetch(`/api/admin/inventory?${params.toString()}`);
-      const json = await res.json();
-      if (!res.ok || !json.success) {
-        throw new Error(json.error?.message || "Failed to load inventory");
+      const res = await adminFetch<{ items: InventoryItem[] }>(
+        `/api/admin/inventory?${params.toString()}`
+      );
+      if (!res.ok || !res.data) {
+        throw new Error(res.error?.message || "Failed to load inventory");
       }
-      setItems(json.data.items || []);
+      setItems(res.data.items || []);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Error fetching inventory";
       setError(msg);
@@ -91,7 +93,7 @@ export default function AdminInventoryPage() {
       const quantityChange = adjustType === "ADD" ? parsedUnits : -parsedUnits;
       const combinedReason = `${reasonCategory}${customNote.trim() ? ` — ${customNote.trim()}` : ""}`;
 
-      const res = await fetch("/api/admin/inventory/adjustments", {
+      const res = await adminFetch("/api/admin/inventory/adjustments", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -101,9 +103,8 @@ export default function AdminInventoryPage() {
         }),
       });
 
-      const json = await res.json();
-      if (!res.ok || !json.success) {
-        throw new Error(json.error?.message || "Failed to adjust inventory");
+      if (!res.ok) {
+        throw new Error(res.error?.message || "Failed to adjust inventory");
       }
 
       setSelectedProduct(null);

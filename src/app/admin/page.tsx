@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { formatPaise } from "@/lib/utils";
+import { adminFetch } from "@/lib/api/admin-client";
 import {
   TrendingUp,
   ShoppingBag,
@@ -49,13 +50,17 @@ export default function AdminDashboardPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/admin/dashboard");
-      const json = await res.json();
-      if (!res.ok || !json.success) {
-        throw new Error(json.error?.message || "Failed to load dashboard metrics");
+      const res = await adminFetch<{
+        metrics: DashboardMetrics;
+        recentOrders: RecentOrder[];
+      }>("/api/admin/dashboard");
+
+      if (!res.ok || !res.data) {
+        throw new Error(res.error?.message || "Failed to load dashboard metrics");
       }
-      setMetrics(json.data.metrics);
-      setRecentOrders(json.data.recentOrders || []);
+
+      setMetrics(res.data.metrics);
+      setRecentOrders(res.data.recentOrders || []);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Error fetching data";
       setError(msg);

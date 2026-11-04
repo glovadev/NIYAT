@@ -33,7 +33,7 @@ export function BottomBar() {
     <>
       <nav
         aria-label="Mobile Bottom Navigation"
-        className="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#FFFCF8]/95 backdrop-blur-md border-t border-[#EAE5DC] shadow-[0_-4px_16px_rgba(0,0,0,0.06)] px-2 py-1.5"
+        className="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#FFFEFC]/95 backdrop-blur-md border-t border-[#D4AF37]/35 shadow-[0_-4px_20px_rgba(10,38,29,0.08)] px-2 py-1.5"
       >
         <div className="grid grid-cols-4 items-center justify-around h-13">
           
@@ -42,14 +42,14 @@ export function BottomBar() {
             href="/"
             className={`flex flex-col items-center justify-center py-1 transition-colors ${
               isHomeActive
-                ? "text-[#153D32] font-semibold"
-                : "text-[#172723]/70 hover:text-[#153D32]"
+                ? "text-[#B38728] font-bold"
+                : "text-[#0A261D]/70 hover:text-[#B38728]"
             }`}
           >
             <div className="relative">
-              <Home className={`w-5 h-5 ${isHomeActive ? "stroke-[2.25]" : "stroke-[1.75]"}`} />
+              <Home className={`w-5 h-5 ${isHomeActive ? "stroke-[2.25] text-[#D4AF37]" : "stroke-[1.75]"}`} />
               {isHomeActive && (
-                <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-[#153D32]" />
+                <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-[#D4AF37] shadow-[0_0_8px_rgba(212,175,55,0.9)]" />
               )}
             </div>
             <span className="text-[10px] mt-0.5 tracking-tight">Home</span>
@@ -60,17 +60,17 @@ export function BottomBar() {
             href="/shop"
             className={`flex flex-col items-center justify-center py-1 transition-colors ${
               isShopActive
-                ? "text-[#153D32] font-semibold"
-                : "text-[#172723]/70 hover:text-[#153D32]"
+                ? "text-[#B38728] font-bold"
+                : "text-[#0A261D]/70 hover:text-[#B38728]"
             }`}
           >
             <div className="relative">
-              <LayoutGrid className={`w-5 h-5 ${isShopActive ? "stroke-[2.25]" : "stroke-[1.75]"}`} />
+              <LayoutGrid className={`w-5 h-5 ${isShopActive ? "stroke-[2.25] text-[#D4AF37]" : "stroke-[1.75]"}`} />
               {isShopActive && (
-                <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-[#153D32]" />
+                <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-[#D4AF37] shadow-[0_0_8px_rgba(212,175,55,0.9)]" />
               )}
             </div>
-            <span className="text-[10px] mt-0.5 tracking-tight">Shop</span>
+            <span className="text-[10px] mt-0.5 tracking-tight">Collection</span>
           </Link>
 
           {/* 3. ORDER */}
@@ -78,17 +78,17 @@ export function BottomBar() {
             href="/orders/track"
             className={`flex flex-col items-center justify-center py-1 transition-colors ${
               isOrdersActive
-                ? "text-[#153D32] font-semibold"
-                : "text-[#172723]/70 hover:text-[#153D32]"
+                ? "text-[#B38728] font-bold"
+                : "text-[#0A261D]/70 hover:text-[#B38728]"
             }`}
           >
             <div className="relative">
-              <Package className={`w-5 h-5 ${isOrdersActive ? "stroke-[2.25]" : "stroke-[1.75]"}`} />
+              <Package className={`w-5 h-5 ${isOrdersActive ? "stroke-[2.25] text-[#D4AF37]" : "stroke-[1.75]"}`} />
               {isOrdersActive && (
-                <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-[#153D32]" />
+                <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-[#D4AF37] shadow-[0_0_8px_rgba(212,175,55,0.9)]" />
               )}
             </div>
-            <span className="text-[10px] mt-0.5 tracking-tight">Order</span>
+            <span className="text-[10px] mt-0.5 tracking-tight">Courier</span>
           </Link>
 
           {/* 4. ACCOUNT (Brought from navbar) */}
@@ -97,16 +97,16 @@ export function BottomBar() {
               href="/account"
               className={`flex flex-col items-center justify-center py-1 transition-colors ${
                 isAccountActive
-                  ? "text-[#153D32] font-semibold"
-                  : "text-[#172723]/70 hover:text-[#153D32]"
+                  ? "text-[#B38728] font-bold"
+                  : "text-[#0A261D]/70 hover:text-[#B38728]"
               }`}
             >
               <div className="relative">
-                <div className="w-5 h-5 rounded-full bg-[#153D32] text-white flex items-center justify-center text-[10px] font-bold uppercase shadow-2xs">
+                <div className="w-5 h-5 rounded-full bg-gradient-to-br from-[#0A261D] to-[#153D32] border border-[#D4AF37]/50 text-[#FCF6BA] flex items-center justify-center text-[10px] font-bold uppercase shadow-2xs">
                   {(profile?.name || user.displayName || user.email || "C")[0].toUpperCase()}
                 </div>
                 {isAccountActive && (
-                  <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-[#153D32]" />
+                  <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-[#D4AF37] shadow-[0_0_8px_rgba(212,175,55,0.9)]" />
                 )}
               </div>
               <span className="text-[10px] mt-0.5 tracking-tight">Account</span>
@@ -117,15 +117,15 @@ export function BottomBar() {
               onClick={handleAccountClick}
               className={`flex flex-col items-center justify-center py-1 transition-colors ${
                 isAccountActive
-                  ? "text-[#153D32] font-semibold"
-                  : "text-[#172723]/70 hover:text-[#153D32]"
+                  ? "text-[#B38728] font-bold"
+                  : "text-[#0A261D]/70 hover:text-[#B38728]"
               }`}
               aria-label="Account Login or Registration"
             >
               <div className="relative">
-                <User className={`w-5 h-5 ${isAccountActive ? "stroke-[2.25]" : "stroke-[1.75]"}`} />
+                <User className={`w-5 h-5 ${isAccountActive ? "stroke-[2.25] text-[#D4AF37]" : "stroke-[1.75]"}`} />
                 {isAccountActive && (
-                  <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-[#153D32]" />
+                  <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-[#D4AF37] shadow-[0_0_8px_rgba(212,175,55,0.9)]" />
                 )}
               </div>
               <span className="text-[10px] mt-0.5 tracking-tight">Account</span>

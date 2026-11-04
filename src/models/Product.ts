@@ -23,6 +23,8 @@ export interface IProduct extends Document {
   sizeLabel: string; // e.g. "40 g", "100 g", "3 ml"
   regularPricePaise: number;
   salePricePaise?: number | null;
+  distributorPricePaise?: number | null;
+  distributorMinQuantity?: number;
   currency: "INR";
   images: IProductImage[];
   ingredients?: string[];
@@ -73,6 +75,16 @@ const ProductSchema = new Schema<IProduct>(
         },
         message: "Sale price must be non-negative and less than regular price.",
       },
+    },
+    distributorPricePaise: {
+      type: Number,
+      default: null,
+      min: 0,
+    },
+    distributorMinQuantity: {
+      type: Number,
+      default: 10,
+      min: 1,
     },
     currency: { type: String, default: "INR", enum: ["INR"] },
     images: { type: [ProductImageSchema], default: [] },

@@ -23,22 +23,53 @@
 
 @layer utilities {
   .bg-gold-gradient {
-    background: linear-gradient(135deg, #C5A059 0%, #D8B975 50%, #B28D45 100%);
+    background: linear-gradient(135deg, #C5A059 0%, #F5E6BE 40%, #D4AF37 60%, #9E7A31 100%);
+  }
+
+  .bg-royal-emerald {
+    background: linear-gradient(135deg, #061812 0%, #0D2C23 50%, #081B15 100%);
   }
 
   .text-gold-gradient {
-    background: linear-gradient(135deg, #C5A059 0%, #E8CD96 50%, #B28D45 100%);
+    background: linear-gradient(135deg, #D4AF37 0%, #FDF3C7 35%, #C5A059 70%, #996515 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
   }
 
+  .text-gold-shimmer {
+    background: linear-gradient(90deg, #C5A059 0%, #FFF5D1 50%, #C5A059 100%);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: goldShimmer 4s linear infinite;
+  }
+
+  .border-gold-subtle {
+    border-color: rgba(212, 175, 55, 0.3);
+  }
+
+  .border-gold-glow {
+    border-color: rgba(212, 175, 55, 0.6);
+    box-shadow: 0 0 15px rgba(212, 175, 55, 0.15);
+  }
+
+  .pattern-arabesque {
+    background-image: radial-gradient(rgba(212, 175, 55, 0.15) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+
   .bg-emerald-gradient {
-    background: linear-gradient(135deg, #0F382C 0%, #16493B 100%);
+    background: linear-gradient(135deg, #071E17 0%, #0D3328 50%, #154537 100%);
   }
 
   .border-ivory {
     border-color: #EAE5DC;
   }
+}
+
+@keyframes goldShimmer {
+  0% { background-position: 0% center; }
+  100% { background-position: 200% center; }
 }
 
 /* Custom subtle scrollbar */

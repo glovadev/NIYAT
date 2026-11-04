@@ -5,8 +5,11 @@ export interface IUserProfile extends Document {
   name: string;
   email?: string;
   phone?: string;
-  role: "CUSTOMER" | "STAFF" | "ADMIN";
+  role: "CUSTOMER" | "STAFF" | "ADMIN" | "DISTRIBUTOR";
   status: "ACTIVE" | "DISABLED";
+  companyName?: string;
+  gstNumber?: string;
+  passwordHash?: string;
   wishlist: mongoose.Types.ObjectId[];
   communicationPreferences: {
     marketingEmail: boolean;
@@ -23,7 +26,7 @@ const UserProfileSchema = new Schema<IUserProfile>(
     phone: { type: String, trim: true },
     role: {
       type: String,
-      enum: ["CUSTOMER", "STAFF", "ADMIN"],
+      enum: ["CUSTOMER", "STAFF", "ADMIN", "DISTRIBUTOR"],
       default: "CUSTOMER",
       index: true,
     },
@@ -33,6 +36,9 @@ const UserProfileSchema = new Schema<IUserProfile>(
       default: "ACTIVE",
       index: true,
     },
+    companyName: { type: String, trim: true },
+    gstNumber: { type: String, trim: true, uppercase: true },
+    passwordHash: { type: String },
     wishlist: [{ type: Schema.Types.ObjectId, ref: "Product" }],
     communicationPreferences: {
       marketingEmail: { type: Boolean, default: false },

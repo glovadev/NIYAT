@@ -24,6 +24,7 @@ import {
   Bell,
   CheckCircle2,
   Lock,
+  Building2,
 } from "lucide-react";
 
 interface AdminShellProps {
@@ -35,6 +36,7 @@ const navLinks = [
   { name: "Hero Banners", href: "/admin/banners", icon: SlidersHorizontal },
   { name: "Products", href: "/admin/products", icon: Package },
   { name: "Categories", href: "/admin/categories", icon: FolderTree },
+  { name: "Distributors", href: "/admin/distributors", icon: Building2 },
   { name: "Orders & Shipments", href: "/admin/orders", icon: ShoppingBag },
   { name: "Inventory Control", href: "/admin/inventory", icon: Boxes },
   { name: "Customer Reviews", href: "/admin/reviews", icon: Star },

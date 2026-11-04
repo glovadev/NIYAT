@@ -20,18 +20,29 @@ function getAdminApp(): App {
   }
 
   if (clientEmail && privateKey) {
-    adminApp = initializeApp({
-      credential: cert({
-        projectId,
-        clientEmail,
-        privateKey,
-      }),
-    });
-  } else {
-    // In local dev without service account json, initialize with project ID
+    try {
+      adminApp = initializeApp({
+        credential: cert({
+          projectId,
+          clientEmail,
+          privateKey,
+        }),
+      });
+      return adminApp;
+    } catch (err) {
+      console.warn("Failed to initialize Firebase Admin with service account credentials, falling back to projectId:", err);
+    }
+  }
+
+  try {
     adminApp = initializeApp({
       projectId,
     });
+  } catch (err) {
+    if (getApps().length > 0) {
+      return getApps()[0];
+    }
+    throw err;
   }
 
   return adminApp;

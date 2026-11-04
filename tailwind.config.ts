@@ -21,10 +21,18 @@ const config: Config = {
             subtle: "#EAF2EE",
           },
           gold: {
-            DEFAULT: "#C5A059",
-            dark: "#A5833F",
-            light: "#D8B975",
+            DEFAULT: "#D4AF37", // Royal Emirati Gold
+            dark: "#996515",
+            metallic: "#C5A059",
+            light: "#E8CD96",
+            champagne: "#F4E8C1",
+            shimmer: "#FCF6BA",
             subtle: "#F9F5EC",
+          },
+          royal: {
+            night: "#061510",
+            emerald: "#0A261D",
+            gold: "#D4AF37",
           },
           ivory: {
             DEFAULT: "#FFFCF8", // Cream

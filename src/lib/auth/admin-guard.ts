@@ -31,9 +31,13 @@ export async function requireAdmin(
 
   const { profile } = auth;
 
-  // In development, if user profile role is CUSTOMER but there are no ADMINs yet,
-  // promote this user to ADMIN to allow immediate setup
-  if (profile.role === "CUSTOMER" && process.env.NODE_ENV === "development") {
+  // Auto-promote store owner or development setup to ADMIN
+  const isOwnerEmail =
+    profile.email &&
+    (profile.email.toLowerCase() === "mainhasan553@gmail.com" ||
+      profile.email.toLowerCase() === "admin@niyat.com");
+
+  if (profile.role === "CUSTOMER" && (process.env.NODE_ENV === "development" || isOwnerEmail)) {
     profile.role = "ADMIN";
     await profile.save();
   }

@@ -1,6 +1,8 @@
 import "server-only";
 import { NextRequest } from "next/server";
 import { cookies } from "next/headers";
+import jwt from "jsonwebtoken";
+import { serverEnv } from "@/lib/config/env";
 import { verifyIdToken, verifySessionCookie } from "@/lib/firebase/admin";
 import { connectToDatabase } from "@/lib/db/mongoose";
 import { UserProfile, IUserProfile } from "@/models/UserProfile";
@@ -69,24 +71,67 @@ export async function getAuthenticatedUser(
       }
     }
 
-    // 3. Fall back to __session cookie
+    // 3. Fall back to __session or __distributor_session cookie
+    let rawCookieToken: string | undefined;
     if (!decoded) {
-      let sessionCookie: string | undefined;
-
       if (req) {
-        sessionCookie = req.cookies.get("__session")?.value;
+        rawCookieToken =
+          req.cookies.get("__distributor_session")?.value ||
+          req.cookies.get("__session")?.value;
       } else {
         const cookieStore = await cookies();
-        sessionCookie = cookieStore.get("__session")?.value;
+        rawCookieToken =
+          cookieStore.get("__distributor_session")?.value ||
+          cookieStore.get("__session")?.value;
       }
 
-      if (sessionCookie) {
-
-        decoded = await verifySessionCookie(sessionCookie);
+      if (rawCookieToken) {
+        decoded = await verifySessionCookie(rawCookieToken);
         // Fallback for development if sessionCookie contains the idToken
         if (!decoded) {
-          decoded = await verifyIdToken(sessionCookie);
+          decoded = await verifyIdToken(rawCookieToken);
         }
+      }
+    }
+
+    // 4. Fallback to custom JWT session token (used for distributor portal authentication)
+    if (!decoded) {
+      const candidateTokens: string[] = [];
+      const bearer = req?.headers.get("authorization");
+      if (bearer && bearer.startsWith("Bearer ")) {
+        candidateTokens.push(bearer.substring(7).trim());
+      }
+      if (rawCookieToken) {
+        candidateTokens.push(rawCookieToken);
+      }
+
+      for (const tokenCandidate of candidateTokens) {
+        if (!tokenCandidate) continue;
+        try {
+          const payload = jwt.verify(tokenCandidate, serverEnv.JWT_SECRET) as any;
+          if (payload && (payload.uid || payload.profileId)) {
+            await connectToDatabase();
+            let profile = null;
+            if (payload.profileId) {
+              profile = await UserProfile.findById(payload.profileId);
+            }
+            if (!profile && payload.uid) {
+              profile = await UserProfile.findOne({ firebaseUid: payload.uid });
+            }
+
+            if (profile && profile.status !== "DISABLED") {
+              return {
+                token: {
+                  uid: profile.firebaseUid,
+                  email: profile.email,
+                  name: profile.name,
+                  role: profile.role,
+                } as any,
+                profile,
+              };
+            }
+          }
+        } catch (_) {}
       }
     }
 

@@ -52,13 +52,13 @@ export function Navbar() {
 
   return (
     <>
-      <header className="sticky top-0 z-40 w-full bg-[#FFFCF8]/95 backdrop-blur-md border-b border-[#EAE5DC] transition-all">
+      <header className="sticky top-0 z-40 w-full bg-[#FFFCF8]/98 backdrop-blur-md border-b border-[#D4AF37]/30 shadow-[0_4px_25px_rgba(212,175,55,0.07)] transition-all">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-20 gap-3 sm:gap-6">
-            {/* Left: Brand Logo */}
+            {/* Left: Brand Logo with Royal UAE Heritage */}
             <div className="flex items-center gap-3 shrink-0">
               <Link href="/" className="flex items-center gap-2.5 sm:gap-3 group select-none">
-                <div className="relative w-8 h-8 sm:w-10 sm:h-10 shrink-0">
+                <div className="relative w-8 h-8 sm:w-10 sm:h-10 shrink-0 p-0.5 rounded-xl border border-[#D4AF37]/40 bg-gradient-to-b from-white to-[#FBF8F2] shadow-xs">
                   <Image
                     src="/logo.svg"
                     alt="NIYAT"
@@ -69,60 +69,66 @@ export function Navbar() {
                   />
                 </div>
                 <div className="flex flex-col items-start">
-                  <span className="font-serif text-2xl sm:text-3xl tracking-[0.18em] font-bold text-[#153D32] leading-none group-hover:text-[#1E5748] transition-colors">
+                  <span className="font-serif text-2xl sm:text-3xl tracking-[0.2em] font-bold text-[#153D32] leading-none group-hover:text-[#0D2B24] transition-colors">
                     NIYAT
                   </span>
-                  <span className="text-[8px] sm:text-[9px] tracking-[0.32em] uppercase text-[#172723]/70 font-sans font-semibold mt-1">
-                    Skincare with Purpose
+                  <span className="text-[7.5px] sm:text-[8.5px] tracking-[0.35em] uppercase text-[#A5833F] font-sans font-bold mt-1">
+                    DUBAI • ROYAL APOTHECARY
                   </span>
                 </div>
               </Link>
             </div>
 
-            {/* Desktop Navigation Links: Home, Shop, Order */}
-            <nav className="hidden lg:flex items-center gap-7 shrink-0">
+            {/* Desktop Navigation Links */}
+            <nav className="hidden lg:flex items-center gap-6 shrink-0">
               <Link
                 href="/"
-                className={`text-sm font-medium transition-colors tracking-wide py-1 ${
+                className={`text-xs font-semibold tracking-wider uppercase transition-colors py-1 ${
                   isHomeActive
-                    ? "text-[#153D32] font-semibold border-b-2 border-[#153D32]"
-                    : "text-[#172723]/80 hover:text-[#153D32]"
+                    ? "text-[#153D32] border-b-2 border-[#D4AF37]"
+                    : "text-[#172723]/75 hover:text-[#153D32]"
                 }`}
               >
                 Home
               </Link>
               <Link
                 href="/shop"
-                className={`text-sm font-medium transition-colors tracking-wide py-1 ${
+                className={`text-xs font-semibold tracking-wider uppercase transition-colors py-1 ${
                   isShopActive
-                    ? "text-[#153D32] font-semibold border-b-2 border-[#153D32]"
-                    : "text-[#172723]/80 hover:text-[#153D32]"
+                    ? "text-[#153D32] border-b-2 border-[#D4AF37]"
+                    : "text-[#172723]/75 hover:text-[#153D32]"
                 }`}
               >
-                Shop
+                The Collection
               </Link>
               <Link
                 href="/orders/track"
-                className={`text-sm font-medium transition-colors tracking-wide py-1 ${
+                className={`text-xs font-semibold tracking-wider uppercase transition-colors py-1 ${
                   isOrderActive
-                    ? "text-[#153D32] font-semibold border-b-2 border-[#153D32]"
-                    : "text-[#172723]/80 hover:text-[#153D32]"
+                    ? "text-[#153D32] border-b-2 border-[#D4AF37]"
+                    : "text-[#172723]/75 hover:text-[#153D32]"
                 }`}
               >
-                Order
+                Track Order
+              </Link>
+              <Link
+                href="/distributor/login"
+                className="text-[11px] font-bold tracking-wider uppercase px-2.5 py-1 rounded-full border border-[#D4AF37]/50 text-[#8F6B20] hover:bg-[#D4AF37]/10 transition-colors"
+              >
+                Wholesale Portal
               </Link>
             </nav>
 
-            {/* Center: Search Bar */}
+            {/* Center: Search Bar with Gold Trim */}
             <div className="flex-1 max-w-xl mx-2 sm:mx-6">
               <form onSubmit={handleSearchSubmit} className="relative w-full">
-                <Search className="absolute left-3.5 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#172723]/40" />
+                <Search className="absolute left-3.5 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#D4AF37]" />
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search products"
-                  className="w-full pl-9 sm:pl-11 pr-3 sm:pr-4 py-2 sm:py-2.5 bg-[#F5EFE8]/70 hover:bg-[#F5EFE8] focus:bg-white border border-[#E8E2D8] focus:border-[#153D32] rounded-xl text-xs sm:text-sm text-[#172723] placeholder-[#172723]/50 focus:outline-none transition-all shadow-inner/10"
+                  placeholder="Search pure saffron, 24K gold creams, serums..."
+                  className="w-full pl-9 sm:pl-11 pr-3 sm:pr-4 py-2 sm:py-2.5 bg-[#FAF6EE]/80 hover:bg-[#FAF6EE] focus:bg-white border border-[#D4AF37]/30 focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37]/20 rounded-xl text-xs sm:text-sm text-[#172723] placeholder-[#172723]/50 focus:outline-none transition-all shadow-inner/10"
                 />
               </form>
             </div>
@@ -165,9 +171,9 @@ export function Navbar() {
                 aria-label={`Wishlist with ${wishlistCount} items`}
               >
                 <div className="relative">
-                  <Heart className="w-5 h-5 text-[#172723]/80 group-hover:text-[#153D32] transition-colors" />
+                  <Heart className="w-5 h-5 text-[#172723]/80 group-hover:text-[#D4AF37] transition-colors" />
                   {wishlistCount > 0 && (
-                    <span className="absolute -top-1.5 -right-2 bg-[#E0534C] text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center shadow-sm animate-scaleIn">
+                    <span className="absolute -top-1.5 -right-2 bg-gradient-to-r from-[#D4AF37] to-[#B38728] text-slate-950 text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center shadow-xs animate-scaleIn">
                       {wishlistCount}
                     </span>
                   )}
@@ -185,9 +191,9 @@ export function Navbar() {
                 aria-label="Open Shopping Cart"
               >
                 <div className="relative">
-                  <ShoppingBag className="w-5 h-5 text-[#172723]/80 group-hover:text-[#153D32] transition-colors" />
+                  <ShoppingBag className="w-5 h-5 text-[#172723]/80 group-hover:text-[#D4AF37] transition-colors" />
                   {totalCount > 0 && (
-                    <span className="absolute -top-1.5 -right-2 bg-[#E0534C] text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center shadow-sm animate-scaleIn">
+                    <span className="absolute -top-1.5 -right-2 bg-gradient-to-r from-[#D4AF37] to-[#B38728] text-slate-950 text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center shadow-xs animate-scaleIn">
                       {totalCount}
                     </span>
                   )}

@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { formatPaise } from "@/lib/utils";
+import { adminFetch } from "@/lib/api/admin-client";
 import {
   TicketPercent,
   Plus,
@@ -56,12 +57,11 @@ export default function AdminCouponsPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/admin/coupons");
-      const json = await res.json();
-      if (!res.ok || !json.success) {
-        throw new Error(json.error?.message || "Failed to load coupons");
+      const res = await adminFetch<{ items: CouponItem[] }>("/api/admin/coupons");
+      if (!res.ok || !res.data) {
+        throw new Error(res.error?.message || "Failed to load coupons");
       }
-      setCoupons(json.data.items || []);
+      setCoupons(res.data.items || []);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Error fetching coupons";
       setError(msg);
@@ -105,15 +105,14 @@ export default function AdminCouponsPage() {
         status: "ACTIVE",
       };
 
-      const res = await fetch("/api/admin/coupons", {
+      const res = await adminFetch("/api/admin/coupons", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
 
-      const json = await res.json();
-      if (!res.ok || !json.success) {
-        throw new Error(json.error?.message || "Failed to create coupon");
+      if (!res.ok) {
+        throw new Error(res.error?.message || "Failed to create coupon");
       }
 
       setModalOpen(false);

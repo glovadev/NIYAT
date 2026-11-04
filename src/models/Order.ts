@@ -1,6 +1,6 @@
 import mongoose, { Schema, Document, Model } from "mongoose";
 
-export type PaymentMethod = "RAZORPAY" | "COD";
+export type PaymentMethod = "RAZORPAY" | "COD" | "BANK_TRANSFER";
 
 export type PaymentStatus =
   | "CREATED"
@@ -92,6 +92,12 @@ export interface IOrder extends Document {
     shippedAt?: Date;
     deliveredAt?: Date;
   };
+  isDistributorOrder?: boolean;
+  distributorInfo?: {
+    companyName?: string;
+    gstNumber?: string;
+    poNumber?: string;
+  };
   statusHistory: IOrderStatusHistory[];
   createdAt: Date;
   updatedAt: Date;
@@ -167,7 +173,7 @@ const OrderSchema = new Schema<IOrder>(
     },
     paymentMethod: {
       type: String,
-      enum: ["RAZORPAY", "COD"],
+      enum: ["RAZORPAY", "COD", "BANK_TRANSFER"],
       required: true,
     },
     paymentStatus: {
@@ -203,6 +209,12 @@ const OrderSchema = new Schema<IOrder>(
       ],
       default: "PENDING_PAYMENT",
       index: true,
+    },
+    isDistributorOrder: { type: Boolean, default: false, index: true },
+    distributorInfo: {
+      companyName: { type: String, trim: true },
+      gstNumber: { type: String, trim: true },
+      poNumber: { type: String, trim: true },
     },
     stockAppliedAt: { type: Date },
     cancellationReason: { type: String },

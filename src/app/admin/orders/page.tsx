@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import { formatPaise } from "@/lib/utils";
+import { adminFetch } from "@/lib/api/admin-client";
 import {
   ShoppingBag,
   Search,
@@ -36,6 +37,8 @@ interface AdminOrderItem {
   fulfilmentStatus: string;
   carrier?: string | null;
   trackingNumber?: string | null;
+  isDistributorOrder?: boolean;
+  distributorInfo?: { companyName?: string; gstNumber?: string; poNumber?: string };
 }
 
 interface DetailedOrder {
@@ -98,6 +101,7 @@ export default function AdminOrdersPage() {
   // Filters
   const [fulfilmentFilter, setFulfilmentFilter] = useState("ALL");
   const [paymentFilter, setPaymentFilter] = useState("ALL");
+  const [orderTypeFilter, setOrderTypeFilter] = useState("ALL");
   const [searchQuery, setSearchQuery] = useState("");
 
   // Modal State
@@ -120,14 +124,16 @@ export default function AdminOrdersPage() {
       const params = new URLSearchParams();
       if (fulfilmentFilter !== "ALL") params.set("fulfilmentStatus", fulfilmentFilter);
       if (paymentFilter !== "ALL") params.set("paymentStatus", paymentFilter);
+      if (orderTypeFilter !== "ALL") params.set("orderType", orderTypeFilter);
       if (searchQuery.trim()) params.set("q", searchQuery.trim());
 
-      const res = await fetch(`/api/admin/orders?${params.toString()}`);
-      const json = await res.json();
-      if (!res.ok || !json.success) {
-        throw new Error(json.error?.message || "Failed to load orders");
+      const res = await adminFetch<{ items: AdminOrderItem[] }>(
+        `/api/admin/orders?${params.toString()}`
+      );
+      if (!res.ok || !res.data) {
+        throw new Error(res.error?.message || "Failed to load orders");
       }
-      setOrders(json.data.items || []);
+      setOrders(res.data.items || []);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Error fetching orders";
       setError(msg);
@@ -141,20 +147,19 @@ export default function AdminOrdersPage() {
       loadOrders();
     }, 200);
     return () => clearTimeout(timer);
-  }, [fulfilmentFilter, paymentFilter, searchQuery]);
+  }, [fulfilmentFilter, paymentFilter, orderTypeFilter, searchQuery]);
 
   const openOrderDetail = async (orderId: string) => {
     setSelectedOrderId(orderId);
     setDetailLoading(true);
     try {
-      const res = await fetch(`/api/admin/orders/${orderId}`);
-      const json = await res.json();
-      if (json.success && json.data) {
-        setDetailedOrder(json.data);
-        setNextStatus(json.data.fulfilmentStatus);
-        setCarrier(json.data.shipment?.carrier || "Delhivery");
-        setTrackingNumber(json.data.shipment?.trackingNumber || "");
-        setTrackingUrl(json.data.shipment?.trackingUrl || "");
+      const res = await adminFetch<any>(`/api/admin/orders/${orderId}`);
+      if (res.ok && res.data) {
+        setDetailedOrder(res.data);
+        setNextStatus(res.data.fulfilmentStatus);
+        setCarrier(res.data.shipment?.carrier || "Delhivery");
+        setTrackingNumber(res.data.shipment?.trackingNumber || "");
+        setTrackingUrl(res.data.shipment?.trackingUrl || "");
       }
     } catch (err) {
       console.error("Failed to load detailed order:", err);
@@ -168,7 +173,7 @@ export default function AdminOrdersPage() {
     if (!selectedOrderId) return;
     setStatusUpdating(true);
     try {
-      const res = await fetch(`/api/admin/orders/${selectedOrderId}/status`, {
+      const res = await adminFetch(`/api/admin/orders/${selectedOrderId}/status`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -180,9 +185,8 @@ export default function AdminOrdersPage() {
         }),
       });
 
-      const json = await res.json();
-      if (!res.ok || !json.success) {
-        throw new Error(json.error?.message || "Failed to update order status");
+      if (!res.ok) {
+        throw new Error(res.error?.message || "Failed to update order status");
       }
 
       // Reload order details & table
@@ -200,13 +204,12 @@ export default function AdminOrdersPage() {
     if (!confirm("Are you sure you want to mark COD cash as collected?")) return;
     setStatusUpdating(true);
     try {
-      const res = await fetch(
+      const res = await adminFetch(
         `/api/admin/orders/${selectedOrderId}/mark-cod-collected`,
         { method: "POST" }
       );
-      const json = await res.json();
-      if (!res.ok || !json.success) {
-        throw new Error(json.error?.message || "Failed to mark COD collected");
+      if (!res.ok) {
+        throw new Error(res.error?.message || "Failed to mark COD collected");
       }
       await openOrderDetail(selectedOrderId);
       loadOrders();
@@ -281,6 +284,20 @@ export default function AdminOrdersPage() {
               <option value="FAILED">FAILED</option>
             </select>
           </div>
+
+          {/* Channel / Order Type Filter */}
+          <div className="flex items-center gap-1.5">
+            <span className="text-[11px] text-slate-400 font-medium">Channel:</span>
+            <select
+              value={orderTypeFilter}
+              onChange={(e) => setOrderTypeFilter(e.target.value)}
+              className="bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-lg px-2.5 py-1.5 outline-none focus:border-amber-400"
+            >
+              <option value="ALL">All Channels</option>
+              <option value="RETAIL">Retail Direct</option>
+              <option value="DISTRIBUTOR">Distributor Wholesale</option>
+            </select>
+          </div>
         </div>
 
         {/* Search */}
@@ -320,8 +337,20 @@ export default function AdminOrdersPage() {
               <tbody className="divide-y divide-slate-800/60 text-xs">
                 {orders.map((o) => (
                   <tr key={o.id} className="hover:bg-slate-900/40 transition">
-                    <td className="py-4 px-6 font-mono font-medium text-white">
-                      {o.orderNumber}
+                    <td className="py-4 px-6">
+                      <div className="font-mono font-medium text-white">{o.orderNumber}</div>
+                      {o.isDistributorOrder && (
+                        <div className="flex items-center gap-1.5 mt-1">
+                          <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-400/20 text-amber-300 border border-amber-400/30">
+                            WHOLESALE
+                          </span>
+                          {o.distributorInfo?.companyName && (
+                            <span className="text-[10px] text-slate-400 truncate max-w-[110px]">
+                              {o.distributorInfo.companyName}
+                            </span>
+                          )}
+                        </div>
+                      )}
                     </td>
                     <td className="py-4 px-6 text-slate-400">
                       {new Date(o.createdAt).toLocaleDateString("en-IN", {

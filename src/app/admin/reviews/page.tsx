@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
+import { adminFetch } from "@/lib/api/admin-client";
 import {
   Star,
   Search,
@@ -42,12 +43,13 @@ export default function AdminReviewsPage() {
       const params = new URLSearchParams();
       if (statusFilter !== "ALL") params.set("status", statusFilter);
 
-      const res = await fetch(`/api/admin/reviews?${params.toString()}`);
-      const json = await res.json();
-      if (!res.ok || !json.success) {
-        throw new Error(json.error?.message || "Failed to load reviews");
+      const res = await adminFetch<{ items: AdminReviewItem[] }>(
+        `/api/admin/reviews?${params.toString()}`
+      );
+      if (!res.ok || !res.data) {
+        throw new Error(res.error?.message || "Failed to load reviews");
       }
-      setReviews(json.data.items || []);
+      setReviews(res.data.items || []);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Error fetching reviews";
       setError(msg);

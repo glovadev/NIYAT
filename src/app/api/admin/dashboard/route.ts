@@ -53,8 +53,8 @@ export async function GET(req: NextRequest) {
       recentOrders: recentOrders.map((o) => ({
         id: String(o._id),
         orderNumber: o.orderNumber,
-        customerName: o.customer.name,
-        customerPhone: o.customer.phone,
+        customerName: o.customer?.name || "Customer",
+        customerPhone: o.customer?.phone || "N/A",
         totalPaise: o.totalPaise,
         paymentStatus: o.paymentStatus,
         paymentMethod: o.paymentMethod,
