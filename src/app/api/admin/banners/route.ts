@@ -8,8 +8,8 @@ import { z } from "zod";
 export const dynamic = "force-dynamic";
 
 const createBannerSchema = z.object({
-  title: z.string().min(2, "Title must be at least 2 characters").max(100),
-  subtitle: z.string().max(160).optional(),
+  title: z.string().max(100).optional().default(""),
+  subtitle: z.string().max(300).optional().default(""),
   imageUrl: z.string().min(1, "A valid image URL is required"),
   imageAlt: z.string().optional(),
   targetUrl: z.string().min(1, "Product or page link is required"),
@@ -90,7 +90,7 @@ export async function POST(req: NextRequest) {
       image: {
         url: imageUrl,
         publicId: `banner_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
-        alt: imageAlt || title,
+        alt: imageAlt || title || "NIYAT Hero Banner",
       },
       targetUrl,
       placement,

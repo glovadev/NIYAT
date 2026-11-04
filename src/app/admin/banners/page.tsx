@@ -191,7 +191,7 @@ export default function AdminBannersPage() {
             title: formTitle.trim(),
             subtitle: formSubtitle.trim() || null,
             imageUrl: formImageUrl.trim(),
-            imageAlt: formImageAlt.trim() || formTitle.trim(),
+            imageAlt: formImageAlt.trim() || formTitle.trim() || "NIYAT Hero Slide",
             targetUrl: formTargetUrl.trim(),
             sortOrder,
             status: formStatus,
@@ -211,7 +211,7 @@ export default function AdminBannersPage() {
             title: formTitle.trim(),
             subtitle: formSubtitle.trim() || undefined,
             imageUrl: formImageUrl.trim(),
-            imageAlt: formImageAlt.trim() || formTitle.trim(),
+            imageAlt: formImageAlt.trim() || formTitle.trim() || "NIYAT Hero Slide",
             targetUrl: formTargetUrl.trim(),
             placement: "HOME_HERO",
             sortOrder,
@@ -368,12 +368,23 @@ export default function AdminBannersPage() {
 
                     {/* Title */}
                     <td className="py-4 px-6">
-                      <div className="text-white font-semibold text-sm">
-                        {b.title}
-                      </div>
-                      {b.subtitle && (
-                        <div className="text-slate-400 text-xs mt-0.5 line-clamp-1 max-w-xs">
-                          {b.subtitle}
+                      {b.title ? (
+                        <>
+                          <div className="text-white font-semibold text-sm">
+                            {b.title}
+                          </div>
+                          {b.subtitle && (
+                            <div className="text-slate-400 text-xs mt-0.5 line-clamp-1 max-w-xs">
+                              {b.subtitle}
+                            </div>
+                          )}
+                        </>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <span className="text-slate-300 font-medium">Image-Only Slide</span>
+                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-400/10 text-amber-300 border border-amber-400/30 font-semibold tracking-wider uppercase">
+                            No Text Overlay
+                          </span>
                         </div>
                       )}
                     </td>
@@ -510,34 +521,51 @@ export default function AdminBannersPage() {
                 </div>
               </div>
 
-              {/* Title & Subtitle */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-slate-300 font-medium mb-1">
-                    Slide Headline / Title *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={formTitle}
-                    onChange={(e) => setFormTitle(e.target.value)}
-                    placeholder="e.g. Whitening Cream"
-                    className="w-full bg-slate-800 border border-slate-700 focus:border-amber-400 rounded-xl px-3.5 py-2 text-white placeholder-slate-500 outline-none"
-                  />
+              {/* Title & Subtitle (Optional for Image-Only Banners) */}
+              <div className="space-y-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-slate-300 font-medium mb-1 flex items-center justify-between">
+                      <span>Slide Headline / Title</span>
+                      <span className="text-[10px] text-amber-400 font-normal">Optional</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={formTitle}
+                      onChange={(e) => setFormTitle(e.target.value)}
+                      placeholder="Leave empty if text is on image"
+                      className="w-full bg-slate-800 border border-slate-700 focus:border-amber-400 rounded-xl px-3.5 py-2 text-white placeholder-slate-500 outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-300 font-medium mb-1 flex items-center justify-between">
+                      <span>Subtitle / Paragraph</span>
+                      <span className="text-[10px] text-amber-400 font-normal">Optional</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={formSubtitle}
+                      onChange={(e) => setFormSubtitle(e.target.value)}
+                      placeholder="Leave empty if text is on image"
+                      className="w-full bg-slate-800 border border-slate-700 focus:border-amber-400 rounded-xl px-3.5 py-2 text-white placeholder-slate-500 outline-none"
+                    />
+                  </div>
                 </div>
 
-                <div>
-                  <label className="block text-slate-300 font-medium mb-1">
-                    Subtitle / Catchphrase
-                  </label>
-                  <input
-                    type="text"
-                    value={formSubtitle}
-                    onChange={(e) => setFormSubtitle(e.target.value)}
-                    placeholder="Signature botanical radiance"
-                    className="w-full bg-slate-800 border border-slate-700 focus:border-amber-400 rounded-xl px-3.5 py-2 text-white placeholder-slate-500 outline-none"
-                  />
-                </div>
+                {/* Helpful status indicator */}
+                {!formTitle.trim() && !formSubtitle.trim() ? (
+                  <div className="p-2.5 rounded-xl bg-amber-400/10 border border-amber-400/25 flex items-center gap-2 text-[11px] text-amber-300">
+                    <Sparkles className="w-3.5 h-3.5 shrink-0 text-amber-400" />
+                    <span>
+                      <strong>Image-Only Slide Mode:</strong> Since title and subtitle are empty, this slide will display your banner image edge-to-edge without any text overlays or obscuring boxes.
+                    </span>
+                  </div>
+                ) : (
+                  <p className="text-[10px] text-slate-400">
+                    Text entered above will be rendered as an elegant royal overlay over the left side of the slide.
+                  </p>
+                )}
               </div>
 
               {/* Image Uploader (Firebase Cloud Storage - Max 1 MB) */}

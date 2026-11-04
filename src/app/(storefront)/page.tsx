@@ -37,21 +37,22 @@ export default async function HomePage() {
   // Slides dynamically uploaded & managed by Admin in /admin/banners
   const heroSlides: HeroSlide[] =
     dbBanners.length > 0
-      ? dbBanners.map((b) => ({
-          id: String(b._id),
-          eyebrow: "NATURAL • SAFE • EFFECTIVE",
-          title: b.title,
-          description:
-            b.subtitle ||
-            "Discover our range of skincare essentials made with nature's finest ingredients for glowing, healthy skin.",
-          imageUrl: b.image?.url || "/images/hero-woman.jpg",
-          imageAlt: b.image?.alt || b.title,
-          targetUrl: b.targetUrl || "/shop",
-        }))
+      ? dbBanners.map((b) => {
+          const hasTitle = Boolean(b.title && b.title.trim());
+          return {
+            id: String(b._id),
+            eyebrow: hasTitle ? "DUBAI ROYAL BOTANICALS • 24K RADIANCE" : undefined,
+            title: b.title || "",
+            description: b.subtitle || "",
+            imageUrl: b.image?.url || "/images/hero-woman.jpg",
+            imageAlt: b.image?.alt || b.title || "NIYAT Luxury Skincare",
+            targetUrl: b.targetUrl || "/shop",
+          };
+        })
       : [
           {
             id: "default-1",
-            eyebrow: "NATURAL • SAFE • EFFECTIVE",
+            eyebrow: "DUBAI ROYAL BOTANICALS • 24K RADIANCE",
             title: "Healthy Skin, Happier You",
             description:
               "Discover our range of skincare essentials made with nature's finest ingredients for glowing, healthy skin.",

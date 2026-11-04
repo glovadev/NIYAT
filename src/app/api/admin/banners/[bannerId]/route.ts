@@ -8,8 +8,8 @@ import { z } from "zod";
 export const dynamic = "force-dynamic";
 
 const updateBannerSchema = z.object({
-  title: z.string().min(2).max(100).optional(),
-  subtitle: z.string().max(160).optional().nullable(),
+  title: z.string().max(100).optional().nullable(),
+  subtitle: z.string().max(300).optional().nullable(),
   imageUrl: z.string().min(1).optional(),
   imageAlt: z.string().optional(),
   targetUrl: z.string().min(1).optional(),
@@ -55,8 +55,8 @@ export async function PATCH(
       status,
     } = parsed.data;
 
-    if (title !== undefined) banner.title = title;
-    if (subtitle !== undefined) banner.subtitle = subtitle || undefined;
+    if (title !== undefined) banner.title = title || "";
+    if (subtitle !== undefined) banner.subtitle = subtitle || "";
     if (imageUrl !== undefined) {
       banner.image.url = imageUrl;
       if (imageAlt !== undefined) banner.image.alt = imageAlt;
