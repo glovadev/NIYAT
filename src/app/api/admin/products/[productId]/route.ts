@@ -69,6 +69,18 @@ export async function PATCH(
       "isFeatured",
     ];
 
+    // Validate product gallery images: minimum 1 mandatory, maximum 3
+    if (body.images !== undefined) {
+      if (!Array.isArray(body.images) || body.images.length === 0) {
+        return apiError(
+          "VALIDATION_ERROR",
+          "At least one product photo (Photo 1 - Primary Cover) is mandatory",
+          400
+        );
+      }
+      body.images = body.images.slice(0, 3);
+    }
+
     for (const key of allowed) {
       if (body[key] !== undefined) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any

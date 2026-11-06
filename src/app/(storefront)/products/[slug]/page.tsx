@@ -124,6 +124,11 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
     inStock: product.stockQuantity > 0,
     stockQuantity: product.stockQuantity,
     images: product.images || [],
+    description: product.description,
+    shortDescription: product.shortDescription,
+    category: category ? { name: category.name, slug: category.slug } : null,
+    ratingAverage: product.ratingAverage,
+    ratingCount: product.ratingCount,
   };
 
   return (
@@ -134,7 +139,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
         {/* Breadcrumb Navigation */}
         <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-xs text-niyat-muted">
           <Link href="/" className="hover:text-niyat-emerald transition-colors">
@@ -161,59 +166,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
           </span>
         </nav>
 
-        {/* Product Heading & Rating */}
-        <div className="space-y-3">
-          {category && (
-            <Link
-              href={`/categories/${category.slug}`}
-              className="text-xs uppercase tracking-widest text-niyat-gold font-semibold hover:underline inline-block"
-            >
-              {category.name} Formulation
-            </Link>
-          )}
-          <h1 className="font-serif text-3xl sm:text-5xl font-bold text-niyat-charcoal leading-tight">
-            {product.name}
-          </h1>
-
-          <div className="flex flex-wrap items-center gap-3 pt-1">
-            <div className="flex items-center gap-1.5 text-xs font-semibold text-niyat-charcoal">
-              <div className="flex items-center text-niyat-gold">
-                {[...Array(5)].map((_, i) => (
-                  <Star
-                    key={i}
-                    className={`w-3.5 h-3.5 ${
-                      i < Math.floor(product.ratingAverage || 5)
-                        ? "fill-niyat-gold text-niyat-gold"
-                        : "text-neutral-300"
-                    }`}
-                  />
-                ))}
-              </div>
-              <span>{product.ratingAverage.toFixed(1)}</span>
-            </div>
-
-            <span className="text-niyat-muted text-xs">•</span>
-
-            <span className="text-xs text-niyat-muted">
-              {product.ratingCount}{" "}
-              {product.ratingCount === 1 ? "Customer Review" : "Customer Reviews"}
-            </span>
-
-            <span className="text-niyat-muted text-xs">•</span>
-
-            <span className="inline-flex items-center gap-1 text-xs text-niyat-emerald font-medium">
-              <ShieldCheck className="w-3.5 h-3.5 text-niyat-emerald" /> 100% Genuine
-            </span>
-          </div>
-
-          {product.shortDescription && (
-            <p className="text-sm sm:text-base text-niyat-muted font-light max-w-3xl leading-relaxed pt-1">
-              {product.shortDescription}
-            </p>
-          )}
-        </div>
-
-        {/* Interactive Gallery & Purchasing Section */}
+        {/* Interactive Gallery & Details / Purchasing Section */}
         <ProductInteractive product={interactiveProduct} />
 
         {/* ================================================================= */}

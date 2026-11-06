@@ -19,6 +19,7 @@ import {
   Edit2,
   Trash2,
   AlertTriangle,
+  Image as ImageIcon,
 } from "lucide-react";
 import { ImageUploader } from "@/components/admin/ImageUploader";
 
@@ -38,7 +39,9 @@ interface AdminProductItem {
   categoryId?: string;
   categoryName: string;
   shortDescription?: string;
+  description?: string;
   imageUrl?: string;
+  images?: Array<{ url: string; publicId?: string; alt?: string; sortOrder?: number }>;
   ratingAverage: number;
   ratingCount: number;
   createdAt: string;
@@ -74,7 +77,9 @@ export default function AdminProductsPage() {
   const [formStock, setFormStock] = useState("50");
   const [formLowStock, setFormLowStock] = useState("10");
   const [formShortDesc, setFormShortDesc] = useState("");
-  const [formImageUrl, setFormImageUrl] = useState("");
+  const [formImage1, setFormImage1] = useState("");
+  const [formImage2, setFormImage2] = useState("");
+  const [formImage3, setFormImage3] = useState("");
   const [formStatus, setFormStatus] = useState<"PUBLISHED" | "DRAFT">("PUBLISHED");
   const [formFeatured, setFormFeatured] = useState(false);
 
@@ -178,7 +183,9 @@ export default function AdminProductsPage() {
     setFormStock("50");
     setFormLowStock("10");
     setFormShortDesc("");
-    setFormImageUrl("");
+    setFormImage1("");
+    setFormImage2("");
+    setFormImage3("");
     setFormStatus("PUBLISHED");
     setFormFeatured(false);
     setModalError(null);
@@ -200,8 +207,20 @@ export default function AdminProductsPage() {
     setFormSalePrice(p.salePricePaise ? (p.salePricePaise / 100).toFixed(0) : "");
     setFormStock(String(p.stockQuantity ?? 50));
     setFormLowStock(String(p.lowStockThreshold ?? 10));
-    setFormShortDesc(p.shortDescription || "");
-    setFormImageUrl(p.imageUrl || "");
+    setFormShortDesc(p.description || p.shortDescription || "");
+
+    // Load up to 3 images from p.images or fallback to p.imageUrl
+    const existingImages =
+      p.images && p.images.length > 0
+        ? p.images.map((img) => img.url)
+        : p.imageUrl
+        ? [p.imageUrl]
+        : [];
+
+    setFormImage1(existingImages[0] || "");
+    setFormImage2(existingImages[1] || "");
+    setFormImage3(existingImages[2] || "");
+
     setFormStatus(p.status === "ARCHIVED" ? "DRAFT" : p.status);
     setFormFeatured(Boolean(p.isFeatured));
     setModalError(null);
@@ -223,6 +242,27 @@ export default function AdminProductsPage() {
         throw new Error("Regular price must be a valid positive number");
       }
 
+      // Collect up to 3 photos
+      // Photo 1 is MANDATORY; Photos 2 and 3 are OPTIONAL
+      if (!formImage1.trim()) {
+        throw new Error("Photo 1 (Primary Cover) is mandatory. Please upload at least one photo.");
+      }
+
+      const uploadedPhotos = [formImage1.trim(), formImage2.trim(), formImage3.trim()].filter(
+        (url) => Boolean(url)
+      );
+
+      if (uploadedPhotos.length === 0) {
+        throw new Error("At least one product photo is mandatory.");
+      }
+
+      const preparedImages = uploadedPhotos.map((url, index) => ({
+        url,
+        publicId: `prod_${Date.now()}_${index}`,
+        alt: `${formName.trim()} photo ${index + 1}`,
+        sortOrder: index,
+      }));
+
       if (editingProductId) {
         // Edit / Update Existing Product
         const updateBody = {
@@ -238,16 +278,8 @@ export default function AdminProductsPage() {
           status: formStatus,
           isFeatured: formFeatured,
           shortDescription: formShortDesc.trim() || undefined,
-          images: formImageUrl.trim()
-            ? [
-                {
-                  url: formImageUrl.trim(),
-                  publicId: `prod_${Date.now()}`,
-                  alt: formName.trim(),
-                  sortOrder: 0,
-                },
-              ]
-            : undefined,
+          description: formShortDesc.trim() || undefined,
+          images: preparedImages,
         };
 
         const res = await adminFetch(`/api/admin/products/${editingProductId}`, {
@@ -275,23 +307,8 @@ export default function AdminProductsPage() {
           status: formStatus,
           isFeatured: formFeatured,
           shortDescription: formShortDesc.trim() || undefined,
-          images: formImageUrl.trim()
-            ? [
-                {
-                  url: formImageUrl.trim(),
-                  publicId: `prod_${Date.now()}`,
-                  alt: formName.trim(),
-                  sortOrder: 0,
-                },
-              ]
-            : [
-                {
-                  url: "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&q=80&w=600",
-                  publicId: "default_skincare",
-                  alt: formName.trim(),
-                  sortOrder: 0,
-                },
-              ],
+          description: formShortDesc.trim() || undefined,
+          images: preparedImages,
         };
 
         const res = await adminFetch("/api/admin/products", {
@@ -478,6 +495,14 @@ export default function AdminProductsPage() {
                                 <Package className="w-5 h-5" />
                               </div>
                             )}
+                            {p.images && p.images.length > 1 && (
+                              <span
+                                className="absolute bottom-0 right-0 bg-slate-950/90 text-[9px] font-bold text-amber-400 px-1 py-0.5 rounded-tl border-t border-l border-amber-400/30"
+                                title={`${p.images.length} photos uploaded`}
+                              >
+                                {p.images.length}📷
+                              </span>
+                            )}
                           </div>
                           <div>
                             <div className="font-semibold text-white text-sm hover:text-amber-400 transition">
@@ -611,12 +636,13 @@ export default function AdminProductsPage() {
 
       {/* Add / Edit Product Modal */}
       {modalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm overflow-y-auto">
-          <div className="relative w-full max-w-2xl bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden my-8">
-            <div className="p-6 border-b border-slate-800 flex items-center justify-between">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/80 backdrop-blur-sm">
+          <div className="relative w-full max-w-3xl bg-slate-900 border border-slate-800 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            {/* Pinned Modal Header */}
+            <div className="p-4 sm:p-5 border-b border-slate-800 flex items-center justify-between shrink-0 bg-slate-900">
               <div className="flex items-center gap-2">
                 <Sparkles className="w-5 h-5 text-amber-400" />
-                <h3 className="font-serif font-bold text-lg text-white">
+                <h3 className="font-serif font-bold text-base sm:text-lg text-white">
                   {editingProductId ? "Edit Formulation Details" : "Add New NIYAT Formulation"}
                 </h3>
               </div>
@@ -630,209 +656,255 @@ export default function AdminProductsPage() {
             </div>
 
             {modalError && (
-              <div className="mx-6 mt-4 p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs flex items-center gap-2">
+              <div className="mx-4 sm:mx-6 mt-4 p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs flex items-center gap-2 shrink-0">
                 <AlertCircle className="w-4 h-4 shrink-0" />
                 <span>{modalError}</span>
               </div>
             )}
 
-            <form onSubmit={handleFormSubmit} className="p-6 space-y-4 text-xs">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-slate-300 font-medium mb-1">
-                    Product Title *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={formName}
-                    onChange={(e) => handleNameChange(e.target.value)}
-                    placeholder="e.g. 24K Radiant Gold Elixir"
-                    className="w-full bg-slate-800 border border-slate-700 focus:border-amber-400 rounded-xl px-3.5 py-2 text-white placeholder-slate-500 outline-none"
-                  />
+            {/* Scrollable Form Body */}
+            <form onSubmit={handleFormSubmit} className="flex-1 flex flex-col min-h-0 overflow-hidden">
+              <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 text-xs">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-slate-300 font-medium mb-1">
+                      Product Title *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={formName}
+                      onChange={(e) => handleNameChange(e.target.value)}
+                      placeholder="e.g. 24K Radiant Gold Elixir"
+                      className="w-full bg-slate-800 border border-slate-700 focus:border-amber-400 rounded-xl px-3.5 py-2 text-white placeholder-slate-500 outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-slate-300 font-medium mb-1">
+                      Slug *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={formSlug}
+                      onChange={(e) => setFormSlug(e.target.value)}
+                      placeholder="24k-radiant-gold-elixir"
+                      className="w-full bg-slate-800 border border-slate-700 focus:border-amber-400 rounded-xl px-3.5 py-2 text-white font-mono placeholder-slate-500 outline-none"
+                    />
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-slate-300 font-medium mb-1">
-                    Slug *
-                  </label>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-slate-300 font-medium mb-1">
+                      SKU Code *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={formSku}
+                      onChange={(e) => setFormSku(e.target.value.toUpperCase())}
+                      placeholder="NY-SERUM-01"
+                      className="w-full bg-slate-800 border border-slate-700 focus:border-amber-400 rounded-xl px-3.5 py-2 text-white font-mono placeholder-slate-500 outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-slate-300 font-medium mb-1">
+                      Category *
+                    </label>
+                    <select
+                      value={formCategory}
+                      onChange={(e) => setFormCategory(e.target.value)}
+                      className="w-full bg-slate-800 border border-slate-700 focus:border-amber-400 rounded-xl px-3 py-2 text-white outline-none cursor-pointer"
+                    >
+                      {categories.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-slate-300 font-medium mb-1">
+                      Size Label *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={formSize}
+                      onChange={(e) => setFormSize(e.target.value)}
+                      placeholder="50 ml / 1.7 fl oz"
+                      className="w-full bg-slate-800 border border-slate-700 focus:border-amber-400 rounded-xl px-3.5 py-2 text-white placeholder-slate-500 outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-slate-300 font-medium mb-1">
+                      Regular Price (₹ INR) *
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      required
+                      value={formRegularPrice}
+                      onChange={(e) => setFormRegularPrice(e.target.value)}
+                      placeholder="799"
+                      className="w-full bg-slate-800 border border-slate-700 focus:border-amber-400 rounded-xl px-3.5 py-2 text-white placeholder-slate-500 outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-slate-300 font-medium mb-1">
+                      Sale Price (₹ INR, optional)
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={formSalePrice}
+                      onChange={(e) => setFormSalePrice(e.target.value)}
+                      placeholder="649 (Leave empty if no sale discount)"
+                      className="w-full bg-slate-800 border border-slate-700 focus:border-amber-400 rounded-xl px-3.5 py-2 text-white placeholder-slate-500 outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-slate-300 font-medium mb-1">
+                      Initial Stock Count
+                    </label>
+                    <input
+                      type="number"
+                      value={formStock}
+                      onChange={(e) => setFormStock(e.target.value)}
+                      placeholder="50"
+                      className="w-full bg-slate-800 border border-slate-700 focus:border-amber-400 rounded-xl px-3.5 py-2 text-white outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-slate-300 font-medium mb-1">
+                      Low Stock Alert
+                    </label>
+                    <input
+                      type="number"
+                      value={formLowStock}
+                      onChange={(e) => setFormLowStock(e.target.value)}
+                      placeholder="10"
+                      className="w-full bg-slate-800 border border-slate-700 focus:border-amber-400 rounded-xl px-3.5 py-2 text-white outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-slate-300 font-medium mb-1">
+                      Publish Status
+                    </label>
+                    <select
+                      value={formStatus}
+                      onChange={(e) =>
+                        setFormStatus(e.target.value as "PUBLISHED" | "DRAFT")
+                      }
+                      className="w-full bg-slate-800 border border-slate-700 focus:border-amber-400 rounded-xl px-3 py-2 text-white outline-none cursor-pointer"
+                    >
+                      <option value="PUBLISHED">PUBLISHED (Live on Store)</option>
+                      <option value="DRAFT">DRAFT (Hidden from Store)</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Featured Badge Option */}
+                <div className="flex items-center gap-2 pt-1">
                   <input
-                    type="text"
-                    required
-                    value={formSlug}
-                    onChange={(e) => setFormSlug(e.target.value)}
-                    placeholder="24k-radiant-gold-elixir"
-                    className="w-full bg-slate-800 border border-slate-700 focus:border-amber-400 rounded-xl px-3.5 py-2 text-white font-mono placeholder-slate-500 outline-none"
+                    type="checkbox"
+                    id="formFeatured"
+                    checked={formFeatured}
+                    onChange={(e) => setFormFeatured(e.target.checked)}
+                    className="w-4 h-4 rounded text-amber-400 bg-slate-800 border-slate-700 focus:ring-amber-400 cursor-pointer"
+                  />
+                  <label htmlFor="formFeatured" className="text-slate-300 text-xs cursor-pointer select-none">
+                    Mark as Featured Product (Highlight on Homepage)
+                  </label>
+                </div>
+
+                {/* Product Photos Gallery (Up to 3 Photos) */}
+                <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className="block text-amber-400 font-semibold text-xs flex items-center gap-1.5">
+                      <ImageIcon className="w-3.5 h-3.5" />
+                      Product Gallery (Photo 1 Mandatory, Photos 2 &amp; 3 Optional) *
+                    </label>
+                    <span className="text-[11px] text-slate-400 font-medium">
+                      {[formImage1, formImage2, formImage3].filter(Boolean).length}/3 photos added
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-400">
+                    <span className="text-amber-300 font-semibold">Photo 1 (Primary Cover) is mandatory</span> for storefront product cards and catalog views. Photos 2 and 3 are optional.
+                  </p>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1">
+                    <div>
+                      <ImageUploader
+                        value={formImage1}
+                        onChange={(url) => setFormImage1(url)}
+                        folder="products"
+                        label="Photo 1 (Primary Cover) *"
+                        aspectHint="Mandatory • Square (800x800)"
+                      />
+                    </div>
+
+                    <div>
+                      <ImageUploader
+                        value={formImage2}
+                        onChange={(url) => setFormImage2(url)}
+                        folder="products"
+                        label="Photo 2 (Angle / Texture)"
+                        aspectHint="Optional • Secondary view"
+                      />
+                    </div>
+
+                    <div>
+                      <ImageUploader
+                        value={formImage3}
+                        onChange={(url) => setFormImage3(url)}
+                        folder="products"
+                        label="Photo 3 (Packaging / Details)"
+                        aspectHint="Optional • Packaging/detail"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-slate-300 font-medium">
+                      Product Description
+                    </label>
+                    <span className="text-[10px] text-slate-500">
+                      No character limit
+                    </span>
+                  </div>
+                  <textarea
+                    rows={4}
+                    value={formShortDesc}
+                    onChange={(e) => setFormShortDesc(e.target.value)}
+                    placeholder="Enter full formulation description, key benefits, active botanical extracts, and application ritual..."
+                    className="w-full bg-slate-800 border border-slate-700 focus:border-amber-400 rounded-xl px-3.5 py-2.5 text-white placeholder-slate-500 outline-none leading-relaxed"
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-slate-300 font-medium mb-1">
-                    SKU Code *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={formSku}
-                    onChange={(e) => setFormSku(e.target.value.toUpperCase())}
-                    placeholder="NY-SERUM-01"
-                    className="w-full bg-slate-800 border border-slate-700 focus:border-amber-400 rounded-xl px-3.5 py-2 text-white font-mono placeholder-slate-500 outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-slate-300 font-medium mb-1">
-                    Category *
-                  </label>
-                  <select
-                    value={formCategory}
-                    onChange={(e) => setFormCategory(e.target.value)}
-                    className="w-full bg-slate-800 border border-slate-700 focus:border-amber-400 rounded-xl px-3 py-2 text-white outline-none cursor-pointer"
-                  >
-                    {categories.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-slate-300 font-medium mb-1">
-                    Size Label *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={formSize}
-                    onChange={(e) => setFormSize(e.target.value)}
-                    placeholder="50 ml / 1.7 fl oz"
-                    className="w-full bg-slate-800 border border-slate-700 focus:border-amber-400 rounded-xl px-3.5 py-2 text-white placeholder-slate-500 outline-none"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-slate-300 font-medium mb-1">
-                    Regular Price (₹ INR) *
-                  </label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    required
-                    value={formRegularPrice}
-                    onChange={(e) => setFormRegularPrice(e.target.value)}
-                    placeholder="799"
-                    className="w-full bg-slate-800 border border-slate-700 focus:border-amber-400 rounded-xl px-3.5 py-2 text-white placeholder-slate-500 outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-slate-300 font-medium mb-1">
-                    Sale Price (₹ INR, optional)
-                  </label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    value={formSalePrice}
-                    onChange={(e) => setFormSalePrice(e.target.value)}
-                    placeholder="649 (Leave empty if no sale discount)"
-                    className="w-full bg-slate-800 border border-slate-700 focus:border-amber-400 rounded-xl px-3.5 py-2 text-white placeholder-slate-500 outline-none"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-slate-300 font-medium mb-1">
-                    Initial Stock Count
-                  </label>
-                  <input
-                    type="number"
-                    value={formStock}
-                    onChange={(e) => setFormStock(e.target.value)}
-                    placeholder="50"
-                    className="w-full bg-slate-800 border border-slate-700 focus:border-amber-400 rounded-xl px-3.5 py-2 text-white outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-slate-300 font-medium mb-1">
-                    Low Stock Alert
-                  </label>
-                  <input
-                    type="number"
-                    value={formLowStock}
-                    onChange={(e) => setFormLowStock(e.target.value)}
-                    placeholder="10"
-                    className="w-full bg-slate-800 border border-slate-700 focus:border-amber-400 rounded-xl px-3.5 py-2 text-white outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-slate-300 font-medium mb-1">
-                    Publish Status
-                  </label>
-                  <select
-                    value={formStatus}
-                    onChange={(e) =>
-                      setFormStatus(e.target.value as "PUBLISHED" | "DRAFT")
-                    }
-                    className="w-full bg-slate-800 border border-slate-700 focus:border-amber-400 rounded-xl px-3 py-2 text-white outline-none cursor-pointer"
-                  >
-                    <option value="PUBLISHED">PUBLISHED (Live on Store)</option>
-                    <option value="DRAFT">DRAFT (Hidden from Store)</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Featured Badge Option */}
-              <div className="flex items-center gap-2 pt-1">
-                <input
-                  type="checkbox"
-                  id="formFeatured"
-                  checked={formFeatured}
-                  onChange={(e) => setFormFeatured(e.target.checked)}
-                  className="w-4 h-4 rounded text-amber-400 bg-slate-800 border-slate-700 focus:ring-amber-400 cursor-pointer"
-                />
-                <label htmlFor="formFeatured" className="text-slate-300 text-xs cursor-pointer select-none">
-                  Mark as Featured Product (Highlight on Homepage)
-                </label>
-              </div>
-
-              {/* Primary Product Photo (Firebase Cloud Storage - Max 1 MB) */}
-              <div>
-                <ImageUploader
-                  value={formImageUrl}
-                  onChange={(url) => setFormImageUrl(url)}
-                  folder="products"
-                  label="Primary Product Photo"
-                  aspectHint="Square or portrait aspect (Recommended: 800x800 or 1000x1250)"
-                />
-              </div>
-
-              <div>
-                <label className="block text-slate-300 font-medium mb-1">
-                  Short Description
-                </label>
-                <textarea
-                  rows={3}
-                  value={formShortDesc}
-                  onChange={(e) => setFormShortDesc(e.target.value)}
-                  placeholder="Clinical-grade botanical face cream crafted to rejuvenate skin barrier and restore luminous tone."
-                  className="w-full bg-slate-800 border border-slate-700 focus:border-amber-400 rounded-xl px-3.5 py-2 text-white placeholder-slate-500 outline-none"
-                />
-              </div>
-
-              <div className="pt-4 border-t border-slate-800 flex items-center justify-end gap-3">
+              {/* Pinned Modal Footer */}
+              <div className="p-4 sm:p-5 border-t border-slate-800 flex items-center justify-end gap-3 shrink-0 bg-slate-900/95">
                 <button
                   type="button"
                   onClick={() => setModalOpen(false)}
-                  className="px-4 py-2.5 rounded-xl bg-slate-800 text-slate-300 hover:text-white transition font-medium"
+                  className="px-4 py-2.5 rounded-xl bg-slate-800 text-slate-300 hover:text-white transition font-medium text-xs sm:text-sm"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="px-5 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-semibold shadow-md shadow-amber-400/20 transition disabled:opacity-50"
+                  className="px-5 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-semibold shadow-md shadow-amber-400/20 transition disabled:opacity-50 text-xs sm:text-sm"
                 >
                   {submitting ? "Saving..." : editingProductId ? "Update Product" : "Create Product"}
                 </button>

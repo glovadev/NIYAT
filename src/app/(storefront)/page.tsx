@@ -7,9 +7,33 @@ import { ProductCard } from "@/components/storefront/ProductCard";
 import { HeroSlider, HeroSlide } from "@/components/storefront/HeroSlider";
 import { CategoryCircles } from "@/components/storefront/CategoryCircles";
 import { RoutineBanner } from "@/components/storefront/RoutineBanner";
+import { PromoBanner, PromoBannerData } from "@/components/storefront/PromoBanner";
 import { ArrowRight, Sparkles, ShieldCheck, HeartHandshake, Truck, Star, Award, Crown } from "lucide-react";
 
 import { Banner } from "@/models/Banner";
+
+const PRESTIGE_PILLARS = [
+  {
+    icon: Sparkles,
+    title: "24K Gold & Saffron",
+    subtitle: "Potent active radiance",
+  },
+  {
+    icon: ShieldCheck,
+    title: "GCC Certified",
+    subtitle: "Dermatologist approved",
+  },
+  {
+    icon: HeartHandshake,
+    title: "Halal & Pure",
+    subtitle: "100% cruelty-free & vegan",
+  },
+  {
+    icon: Truck,
+    title: "White-Glove Courier",
+    subtitle: "Complimentary above ₹999",
+  },
+];
 
 export const dynamic = "force-dynamic";
 
@@ -17,10 +41,11 @@ export default async function HomePage() {
   let dbProducts: any[] = [];
   let categories: any[] = [];
   let dbBanners: any[] = [];
+  let dbPromoBanners: any[] = [];
 
   try {
     await connectToDatabase();
-    [dbProducts, categories, dbBanners] = await Promise.all([
+    [dbProducts, categories, dbBanners, dbPromoBanners] = await Promise.all([
       Product.find({ status: "PUBLISHED" })
         .populate("categoryId", "name slug")
         .sort({ isFeatured: -1, createdAt: -1 })
@@ -29,10 +54,30 @@ export default async function HomePage() {
       Banner.find({ placement: "HOME_HERO", status: "ACTIVE" })
         .sort({ sortOrder: 1, createdAt: -1 })
         .lean(),
+      Banner.find({ placement: "HOME_PROMO", status: "ACTIVE" })
+        .sort({ sortOrder: 1, createdAt: -1 })
+        .lean(),
     ]);
   } catch (dbError) {
     console.error("HomePage: Database connection or query error:", dbError);
   }
+
+  // Admin-managed middle promotional banner (placed between Bestsellers & Trending)
+  const activePromo = dbPromoBanners && dbPromoBanners.length > 0 ? dbPromoBanners[0] : null;
+  const promoBannerData: PromoBannerData | null = activePromo
+    ? {
+        id: String(activePromo._id),
+        title: activePromo.title || "",
+        subtitle: activePromo.subtitle || "",
+        imageUrl: activePromo.image?.url || "",
+        mobileImageUrl:
+          activePromo.mobileImage?.url && activePromo.mobileImage.url.trim()
+            ? activePromo.mobileImage.url.trim()
+            : undefined,
+        imageAlt: activePromo.image?.alt || activePromo.title || "NIYAT Promotion",
+        targetUrl: activePromo.targetUrl || "/shop",
+      }
+    : null;
 
   // Slides dynamically uploaded & managed by Admin in /admin/banners
   const heroSlides: HeroSlide[] =
@@ -110,7 +155,7 @@ export default async function HomePage() {
     return 0;
   });
 
-  const bestSellingProducts = sortedProducts.map((p, idx) => {
+  const allCatalogProducts = sortedProducts.map((p, idx) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const cat = p.categoryId as any;
     const badge = BADGES[idx % BADGES.length];
@@ -139,6 +184,9 @@ export default async function HomePage() {
     };
   });
 
+  const bestSellingProducts = allCatalogProducts.slice(0, 4);
+  const trendingProducts = allCatalogProducts;
+
   return (
     <div className="w-full bg-[#FCFAF6] text-[#0A261D] overflow-x-hidden">
       
@@ -150,45 +198,80 @@ export default async function HomePage() {
       {/* ================================================================= */}
       {/* LUXURY PRESTIGE STRIP: UAE ROYAL STANDARDS                         */}
       {/* ================================================================= */}
-      <section className="border-y border-[#D4AF37]/25 bg-gradient-to-r from-[#061B14] via-[#0A261D] to-[#061B14] text-white py-4 sm:py-5 px-4 sm:px-6">
-        <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 text-center">
-          <div className="flex items-center justify-center gap-2.5 sm:gap-3">
-            <div className="w-8 h-8 rounded-full bg-[#D4AF37]/20 border border-[#D4AF37]/40 flex items-center justify-center shrink-0">
-              <Sparkles className="w-4 h-4 text-[#D4AF37]" />
-            </div>
-            <div className="text-left">
-              <p className="text-[11px] sm:text-xs font-bold text-[#FCF6BA] tracking-wider uppercase">24K Gold & Saffron</p>
-              <p className="text-[10px] text-white/70">Potent active radiance</p>
-            </div>
-          </div>
+      <section className="border-y border-[#D4AF37]/25 bg-gradient-to-r from-[#061B14] via-[#0A261D] to-[#061B14] text-white py-3.5 md:py-5 px-0 md:px-6 relative overflow-hidden">
+        {/* Desktop View (md and above): 4-Column Balanced Grid */}
+        <div className="hidden md:grid max-w-7xl mx-auto md:grid-cols-4 gap-6 text-center">
+          {PRESTIGE_PILLARS.map((item, idx) => {
+            const Icon = item.icon;
+            return (
+              <div key={idx} className="flex items-center justify-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-[#D4AF37]/20 border border-[#D4AF37]/40 flex items-center justify-center shrink-0">
+                  <Icon className="w-4 h-4 text-[#D4AF37]" />
+                </div>
+                <div className="text-left">
+                  <p className="text-xs font-bold text-[#FCF6BA] tracking-wider uppercase">{item.title}</p>
+                  <p className="text-[10px] text-white/70">{item.subtitle}</p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
 
-          <div className="flex items-center justify-center gap-2.5 sm:gap-3">
-            <div className="w-8 h-8 rounded-full bg-[#D4AF37]/20 border border-[#D4AF37]/40 flex items-center justify-center shrink-0">
-              <ShieldCheck className="w-4 h-4 text-[#D4AF37]" />
-            </div>
-            <div className="text-left">
-              <p className="text-[11px] sm:text-xs font-bold text-[#FCF6BA] tracking-wider uppercase">GCC Certified</p>
-              <p className="text-[10px] text-white/70">Dermatologist approved</p>
-            </div>
-          </div>
+        {/* Mobile View (< md): Continuous Moving Ribbon in One Line */}
+        <div className="md:hidden relative w-full overflow-hidden">
+          {/* Subtle edge fades for luxury seamless marquee transition */}
+          <div className="absolute left-0 inset-y-0 w-8 bg-gradient-to-r from-[#061B14] to-transparent pointer-events-none z-10" />
+          <div className="absolute right-0 inset-y-0 w-8 bg-gradient-to-l from-[#061B14] to-transparent pointer-events-none z-10" />
 
-          <div className="flex items-center justify-center gap-2.5 sm:gap-3">
-            <div className="w-8 h-8 rounded-full bg-[#D4AF37]/20 border border-[#D4AF37]/40 flex items-center justify-center shrink-0">
-              <HeartHandshake className="w-4 h-4 text-[#D4AF37]" />
+          <div className="animate-marquee hover:[animation-play-state:paused] active:[animation-play-state:paused] flex items-center py-0.5">
+            {/* Set 1 */}
+            <div className="flex items-center shrink-0 gap-6 pr-6">
+              {PRESTIGE_PILLARS.map((item, idx) => {
+                const Icon = item.icon;
+                return (
+                  <div key={`mob-1-${idx}`} className="flex items-center gap-6 shrink-0">
+                    <div className="flex items-center gap-2.5 shrink-0">
+                      <div className="w-7 h-7 rounded-full bg-[#D4AF37]/20 border border-[#D4AF37]/40 flex items-center justify-center shrink-0">
+                        <Icon className="w-3.5 h-3.5 text-[#D4AF37]" />
+                      </div>
+                      <div className="text-left whitespace-nowrap">
+                        <p className="text-[11px] font-bold text-[#FCF6BA] tracking-wider uppercase leading-tight">
+                          {item.title}
+                        </p>
+                        <p className="text-[10px] text-white/70 leading-tight">
+                          {item.subtitle}
+                        </p>
+                      </div>
+                    </div>
+                    <span className="text-[#D4AF37]/40 text-xs select-none">✧</span>
+                  </div>
+                );
+              })}
             </div>
-            <div className="text-left">
-              <p className="text-[11px] sm:text-xs font-bold text-[#FCF6BA] tracking-wider uppercase">Halal & Pure</p>
-              <p className="text-[10px] text-white/70">100% cruelty-free & vegan</p>
-            </div>
-          </div>
 
-          <div className="flex items-center justify-center gap-2.5 sm:gap-3">
-            <div className="w-8 h-8 rounded-full bg-[#D4AF37]/20 border border-[#D4AF37]/40 flex items-center justify-center shrink-0">
-              <Truck className="w-4 h-4 text-[#D4AF37]" />
-            </div>
-            <div className="text-left">
-              <p className="text-[11px] sm:text-xs font-bold text-[#FCF6BA] tracking-wider uppercase">White-Glove Courier</p>
-              <p className="text-[10px] text-white/70">Complimentary above ₹999</p>
+            {/* Set 2 (Identical duplicate for seamless infinite loop) */}
+            <div className="flex items-center shrink-0 gap-6 pr-6" aria-hidden="true">
+              {PRESTIGE_PILLARS.map((item, idx) => {
+                const Icon = item.icon;
+                return (
+                  <div key={`mob-2-${idx}`} className="flex items-center gap-6 shrink-0">
+                    <div className="flex items-center gap-2.5 shrink-0">
+                      <div className="w-7 h-7 rounded-full bg-[#D4AF37]/20 border border-[#D4AF37]/40 flex items-center justify-center shrink-0">
+                        <Icon className="w-3.5 h-3.5 text-[#D4AF37]" />
+                      </div>
+                      <div className="text-left whitespace-nowrap">
+                        <p className="text-[11px] font-bold text-[#FCF6BA] tracking-wider uppercase leading-tight">
+                          {item.title}
+                        </p>
+                        <p className="text-[10px] text-white/70 leading-tight">
+                          {item.subtitle}
+                        </p>
+                      </div>
+                    </div>
+                    <span className="text-[#D4AF37]/40 text-xs select-none">✧</span>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>
@@ -200,7 +283,7 @@ export default async function HomePage() {
       <CategoryCircles serverCategories={categories} />
 
       {/* ================================================================= */}
-      {/* F. BEST SELLING PRODUCTS (ROYAL APOTHECARY SELECTION)              */}
+      {/* F. BEST SELLING PRODUCTS                                          */}
       {/* ================================================================= */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16">
         {/* Section Header */}
@@ -213,7 +296,7 @@ export default async function HomePage() {
               </span>
             </div>
             <h2 className="font-serif text-2xl sm:text-4xl font-bold text-[#0A261D]">
-              Signature Apothecary Elixirs
+              Best Selling Products
             </h2>
             <p className="text-xs sm:text-sm text-stone-600 mt-1 max-w-xl">
               Handcrafted formulations designed to restore luminosity, clarify complexion, and protect against environmental stress.
@@ -224,7 +307,7 @@ export default async function HomePage() {
             href="/shop"
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white border border-[#D4AF37]/50 hover:border-[#D4AF37] text-xs sm:text-sm font-semibold text-[#0A261D] hover:text-[#B38728] hover:shadow-[0_4px_16px_rgba(212,175,55,0.2)] transition-all group self-start sm:self-end"
           >
-            <span>Explore All Elixirs</span>
+            <span>Explore All Bestsellers</span>
             <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1 text-[#D4AF37]" />
           </Link>
         </div>
@@ -233,7 +316,7 @@ export default async function HomePage() {
         {bestSellingProducts.length > 0 ? (
           <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
             {bestSellingProducts.map((product) => (
-              <ProductCard key={product.id} {...product} />
+              <ProductCard key={`bestseller-${product.id}`} {...product} badge="Bestseller" />
             ))}
           </div>
         ) : (
@@ -245,7 +328,57 @@ export default async function HomePage() {
       </section>
 
       {/* ================================================================= */}
-      {/* UAE CLIENT PRAISE & CONNOISSEUR TESTIMONIALS                     */}
+      {/* G. PROMOTIONAL BANNER (ADMIN CONTROLLED)                          */}
+      {/* ================================================================= */}
+      <PromoBanner banner={promoBannerData} />
+
+      {/* ================================================================= */}
+      {/* H. TRENDING PRODUCTS (SHOW ALL PRODUCTS)                          */}
+      {/* ================================================================= */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16">
+        {/* Section Header */}
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 sm:mb-10 gap-4 border-b border-[#D4AF37]/20 pb-5">
+          <div>
+            <div className="flex items-center gap-2 mb-1.5">
+              <Sparkles className="w-4 h-4 text-[#D4AF37]" />
+              <span className="text-[10px] sm:text-xs font-bold tracking-[0.25em] text-[#B38728] uppercase">
+                Trending Across Emirates
+              </span>
+            </div>
+            <h2 className="font-serif text-2xl sm:text-4xl font-bold text-[#0A261D]">
+              Trending Products
+            </h2>
+            <p className="text-xs sm:text-sm text-stone-600 mt-1 max-w-xl">
+              Explore our complete royal apothecary catalog — handcrafted with rare botanicals, saffron, and 24K gold.
+            </p>
+          </div>
+
+          <Link
+            href="/shop"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white border border-[#D4AF37]/50 hover:border-[#D4AF37] text-xs sm:text-sm font-semibold text-[#0A261D] hover:text-[#B38728] hover:shadow-[0_4px_16px_rgba(212,175,55,0.2)] transition-all group self-start sm:self-end"
+          >
+            <span>View Full Catalog</span>
+            <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1 text-[#D4AF37]" />
+          </Link>
+        </div>
+
+        {/* 2 Cards on Mobile, 4 Cards on Desktop Grid */}
+        {trendingProducts.length > 0 ? (
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
+            {trendingProducts.map((product) => (
+              <ProductCard key={`trending-${product.id}`} {...product} badge="Trending" />
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-16 bg-white rounded-2xl border border-[#D4AF37]/30 shadow-xs">
+            <Sparkles className="w-8 h-8 text-[#D4AF37] mx-auto mb-2" />
+            <p className="text-sm font-serif text-[#0A261D]">Curating the Royal Collection...</p>
+          </div>
+        )}
+      </section>
+
+      {/* ================================================================= */}
+      {/* I. UAE CLIENT PRAISE & CONNOISSEUR TESTIMONIALS                   */}
       {/* ================================================================= */}
       <section className="bg-gradient-to-b from-[#F7F3EB] to-[#FCFAF6] border-y border-[#D4AF37]/20 py-12 sm:py-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
@@ -335,9 +468,9 @@ export default async function HomePage() {
       </section>
 
       {/* ================================================================= */}
-      {/* G. COMPLETE SKINCARE ROUTINE BANNER                               */}
+      {/* J. COMPLETE SKINCARE ROUTINE BANNER (Shown when promo is active)   */}
       {/* ================================================================= */}
-      <RoutineBanner />
+      {promoBannerData && <RoutineBanner />}
 
     </div>
   );

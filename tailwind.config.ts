@@ -65,9 +65,14 @@ const config: Config = {
           "0%": { width: "0%" },
           "100%": { width: "100%" },
         },
+        marquee: {
+          "0%": { transform: "translate3d(0%, 0, 0)" },
+          "100%": { transform: "translate3d(-50%, 0, 0)" },
+        },
       },
       animation: {
         progress: "progress 5s linear forwards",
+        marquee: "marquee 22s linear infinite",
       },
     },
   },

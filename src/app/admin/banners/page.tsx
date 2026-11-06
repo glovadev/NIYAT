@@ -25,6 +25,7 @@ import {
   Crown,
   ArrowRight,
   Image as ImageIcon,
+  Tag,
 } from "lucide-react";
 import { ImageUploader } from "@/components/admin/ImageUploader";
 
@@ -68,6 +69,9 @@ export default function AdminBannersPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Filter State
+  const [activePlacementFilter, setActivePlacementFilter] = useState<"HOME_HERO" | "HOME_PROMO" | "ALL">("HOME_HERO");
+
   // Modal State
   const [modalOpen, setModalOpen] = useState(false);
   const [editingBannerId, setEditingBannerId] = useState<string | null>(null);
@@ -75,6 +79,7 @@ export default function AdminBannersPage() {
   const [modalError, setModalError] = useState<string | null>(null);
 
   // Form Fields
+  const [formPlacement, setFormPlacement] = useState<"HOME_HERO" | "HOME_PROMO">("HOME_HERO");
   const [formTitle, setFormTitle] = useState("");
   const [formSubtitle, setFormSubtitle] = useState("");
   const [formImageUrl, setFormImageUrl] = useState("");
@@ -102,14 +107,15 @@ export default function AdminBannersPage() {
     return fetch(url, { ...options, headers });
   };
 
-  const loadBanners = async () => {
+  const loadBanners = async (placementFilter?: "HOME_HERO" | "HOME_PROMO" | "ALL") => {
+    const targetFilter = placementFilter !== undefined ? placementFilter : activePlacementFilter;
     setLoading(true);
     setError(null);
     try {
-      const res = await adminFetch("/api/admin/banners?placement=HOME_HERO");
+      const res = await adminFetch(`/api/admin/banners?placement=${targetFilter}`);
       const json = await res.json();
       if (!res.ok || !json.success) {
-        throw new Error(json.error?.message || "Failed to load hero banners");
+        throw new Error(json.error?.message || "Failed to load banners");
       }
       setBanners(json.data.items || []);
     } catch (err: unknown) {
@@ -147,6 +153,7 @@ export default function AdminBannersPage() {
 
   const openCreateModal = () => {
     setEditingBannerId(null);
+    setFormPlacement(activePlacementFilter === "HOME_PROMO" ? "HOME_PROMO" : "HOME_HERO");
     setFormTitle("");
     setFormSubtitle("");
     setFormImageUrl("");
@@ -168,6 +175,7 @@ export default function AdminBannersPage() {
 
   const openEditModal = (banner: AdminBannerItem) => {
     setEditingBannerId(banner.id);
+    setFormPlacement(banner.placement === "HOME_PROMO" ? "HOME_PROMO" : "HOME_HERO");
     setFormTitle(banner.title);
     setFormSubtitle(banner.subtitle || "");
     setFormImageUrl(banner.image.url);
@@ -232,8 +240,9 @@ export default function AdminBannersPage() {
             subtitle: formSubtitle.trim() || null,
             imageUrl: formImageUrl.trim(),
             mobileImageUrl: formMobileImageUrl.trim() || null,
-            imageAlt: formImageAlt.trim() || formTitle.trim() || "NIYAT Hero Slide",
+            imageAlt: formImageAlt.trim() || formTitle.trim() || "NIYAT Banner",
             targetUrl: formTargetUrl.trim(),
+            placement: formPlacement,
             textShadow: formTextShadow,
             textSize: formTextSize,
             textColor: formTextColor,
@@ -258,9 +267,9 @@ export default function AdminBannersPage() {
             subtitle: formSubtitle.trim() || undefined,
             imageUrl: formImageUrl.trim(),
             mobileImageUrl: formMobileImageUrl.trim() || undefined,
-            imageAlt: formImageAlt.trim() || formTitle.trim() || "NIYAT Hero Slide",
+            imageAlt: formImageAlt.trim() || formTitle.trim() || "NIYAT Banner",
             targetUrl: formTargetUrl.trim(),
-            placement: "HOME_HERO",
+            placement: formPlacement,
             textShadow: formTextShadow,
             textSize: formTextSize,
             textColor: formTextColor,
@@ -273,7 +282,7 @@ export default function AdminBannersPage() {
 
         const json = await res.json();
         if (!res.ok || !json.success) {
-          throw new Error(json.error?.message || "Failed to create hero banner");
+          throw new Error(json.error?.message || "Failed to create banner");
         }
       }
 
@@ -327,16 +336,24 @@ export default function AdminBannersPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-serif font-bold text-white tracking-wide">
-            Hero Sliding Carousel
+            {activePlacementFilter === "HOME_HERO"
+              ? "Hero Sliding Carousel"
+              : activePlacementFilter === "HOME_PROMO"
+              ? "Middle Promotional Banner"
+              : "Storefront Banners & Promos"}
           </h1>
           <p className="text-xs text-slate-400 mt-1">
-            Curate the storefront homepage hero slider. Add one or multiple slides with attached product links.
+            {activePlacementFilter === "HOME_HERO"
+              ? "Curate the storefront homepage hero slider. Add one or multiple slides with attached product links."
+              : activePlacementFilter === "HOME_PROMO"
+              ? "Manage the full-width promotional banner displayed between Best Selling Products and Trending Products."
+              : "Manage all homepage carousel slides and promotional banners."}
           </p>
         </div>
         <div className="flex items-center gap-3">
           <button
             type="button"
-            onClick={loadBanners}
+            onClick={() => loadBanners()}
             disabled={loading}
             className="p-2 rounded-xl bg-slate-800 text-slate-400 hover:text-white border border-slate-700 transition"
           >
@@ -348,9 +365,59 @@ export default function AdminBannersPage() {
             className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 text-xs font-semibold shadow-md shadow-amber-400/20 transition"
           >
             <Plus className="w-4 h-4" />
-            Add Hero Slide
+            {activePlacementFilter === "HOME_PROMO" ? "Add Promo Banner" : "Add Hero Slide"}
           </button>
         </div>
+      </div>
+
+      {/* Placement Switcher Tabs */}
+      <div className="flex flex-wrap items-center gap-2 border-b border-slate-800 pb-2">
+        <button
+          type="button"
+          onClick={() => {
+            setActivePlacementFilter("HOME_HERO");
+            loadBanners("HOME_HERO");
+          }}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition ${
+            activePlacementFilter === "HOME_HERO"
+              ? "bg-amber-400 text-slate-950 shadow-md shadow-amber-400/20"
+              : "bg-slate-900 text-slate-400 hover:text-white border border-slate-800"
+          }`}
+        >
+          <Crown className="w-3.5 h-3.5" />
+          <span>Top Hero Carousel</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            setActivePlacementFilter("HOME_PROMO");
+            loadBanners("HOME_PROMO");
+          }}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition ${
+            activePlacementFilter === "HOME_PROMO"
+              ? "bg-amber-400 text-slate-950 shadow-md shadow-amber-400/20"
+              : "bg-slate-900 text-slate-400 hover:text-white border border-slate-800"
+          }`}
+        >
+          <Tag className="w-3.5 h-3.5" />
+          <span>Middle Promo Banner (Bestseller & Trending)</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            setActivePlacementFilter("ALL");
+            loadBanners("ALL");
+          }}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition ${
+            activePlacementFilter === "ALL"
+              ? "bg-amber-400 text-slate-950 shadow-md shadow-amber-400/20"
+              : "bg-slate-900 text-slate-400 hover:text-white border border-slate-800"
+          }`}
+        >
+          <span>All Banners</span>
+        </button>
       </div>
 
       {error && (
@@ -450,6 +517,15 @@ export default function AdminBannersPage() {
 
                     {/* Title */}
                     <td className="py-4 px-6">
+                      <div className="mb-1.5">
+                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider ${
+                          b.placement === "HOME_PROMO"
+                            ? "bg-purple-500/15 text-purple-300 border border-purple-500/30"
+                            : "bg-amber-400/15 text-amber-300 border border-amber-400/30"
+                        }`}>
+                          {b.placement === "HOME_PROMO" ? "🏷️ Middle Promo" : "👑 Top Hero"}
+                        </span>
+                      </div>
                       {b.title ? (
                         <>
                           <div className="text-white font-semibold text-sm">
@@ -579,6 +655,54 @@ export default function AdminBannersPage() {
                 {/* ============================================================== */}
                 <div className="lg:col-span-7 space-y-4 text-xs">
                   
+                  {/* Banner Placement Selector */}
+                  <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2">
+                    <label className="block text-amber-400 font-semibold text-xs flex items-center gap-1.5">
+                      <SlidersHorizontal className="w-3.5 h-3.5" />
+                      Banner Placement on Storefront *
+                    </label>
+                    <p className="text-[11px] text-slate-400">
+                      Choose where this banner will appear on the homepage.
+                    </p>
+                    <div className="grid grid-cols-2 gap-2 pt-1">
+                      <button
+                        type="button"
+                        onClick={() => setFormPlacement("HOME_HERO")}
+                        className={`p-3 rounded-xl border text-left transition flex flex-col gap-1 ${
+                          formPlacement === "HOME_HERO"
+                            ? "bg-amber-400/10 border-amber-400 text-white shadow-sm"
+                            : "bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200"
+                        }`}
+                      >
+                        <div className="flex items-center gap-1.5 font-semibold text-xs">
+                          <Crown className="w-3.5 h-3.5 text-amber-400" />
+                          <span>Top Hero Carousel</span>
+                        </div>
+                        <p className="text-[10px] text-slate-400 leading-tight">
+                          Rotating carousel at the very top of homepage
+                        </p>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setFormPlacement("HOME_PROMO")}
+                        className={`p-3 rounded-xl border text-left transition flex flex-col gap-1 ${
+                          formPlacement === "HOME_PROMO"
+                            ? "bg-amber-400/10 border-amber-400 text-white shadow-sm"
+                            : "bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200"
+                        }`}
+                      >
+                        <div className="flex items-center gap-1.5 font-semibold text-xs">
+                          <Tag className="w-3.5 h-3.5 text-amber-400" />
+                          <span>Middle Promo Banner</span>
+                        </div>
+                        <p className="text-[10px] text-slate-400 leading-tight">
+                          Between Best Selling & Trending
+                        </p>
+                      </button>
+                    </div>
+                  </div>
+
                   {/* Product Link Selector */}
                   <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2">
                     <label className="block text-amber-400 font-semibold text-xs flex items-center gap-1.5">

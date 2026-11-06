@@ -15,7 +15,7 @@ const createProductSchema = z.object({
   categoryId: z.string().min(1),
   regularPricePaise: z.number().int().min(0),
   salePricePaise: z.number().int().min(0).nullable().optional(),
-  shortDescription: z.string().max(300).optional(),
+  shortDescription: z.string().optional(),
   description: z.string().optional(),
   stockQuantity: z.number().int().min(0).default(0),
   lowStockThreshold: z.number().int().min(0).default(5),
@@ -30,7 +30,8 @@ const createProductSchema = z.object({
         sortOrder: z.number().default(0),
       })
     )
-    .default([]),
+    .min(1, "At least one product photo (Photo 1 - Primary Cover) is mandatory")
+    .max(3, "Every product can have up to 3 photos"),
   ingredients: z.array(z.string()).default([]),
   directions: z.string().optional(),
   warnings: z.string().optional(),
@@ -97,8 +98,10 @@ export async function GET(req: NextRequest) {
           isFeatured: p.isFeatured,
           categoryId: cat?._id ? String(cat._id) : undefined,
           categoryName: cat?.name || "Uncategorized",
-          shortDescription: p.shortDescription || "",
+          shortDescription: p.shortDescription || p.description || "",
+          description: p.description || p.shortDescription || "",
           imageUrl: p.images?.[0]?.url,
+          images: p.images || [],
           ratingAverage: p.ratingAverage,
           ratingCount: p.ratingCount,
           createdAt: p.createdAt,

@@ -41,6 +41,11 @@ export const productImageSchema = z.object({
   sortOrder: z.number().default(0),
 });
 
+export const productGallerySchema = z
+  .array(productImageSchema)
+  .min(1, "At least one product photo (Photo 1 - Primary Cover) is mandatory")
+  .max(3, "Every product can have up to 3 photos");
+
 describe("Validation Schemas Unit Tests", () => {
   describe("productImageSchema", () => {
     test("accepts local uploaded relative image paths", () => {
@@ -181,6 +186,51 @@ describe("Validation Schemas Unit Tests", () => {
     test("rejects coupon codes with special characters or invalid length", () => {
       assert.strictEqual(couponCodeSchema.safeParse("N").success, false); // too short
       assert.strictEqual(couponCodeSchema.safeParse("CODE#123").success, false); // invalid character
+    });
+  });
+
+  describe("productGallerySchema (Minimum 1 Mandatory, Up to 3 Photos)", () => {
+    const sampleImg = (n: number) => ({
+      url: `/uploads/products/photo_${n}.jpeg`,
+      publicId: `prod_${n}`,
+      alt: `Photo ${n}`,
+      sortOrder: n,
+    });
+
+    test("accepts minimum 1 mandatory photo", () => {
+      const res = productGallerySchema.safeParse([sampleImg(1)]);
+      assert.strictEqual(res.success, true);
+    });
+
+    test("accepts 2 photos (1 mandatory + 1 optional)", () => {
+      const res = productGallerySchema.safeParse([sampleImg(1), sampleImg(2)]);
+      assert.strictEqual(res.success, true);
+    });
+
+    test("accepts 3 photos (1 mandatory + 2 optional)", () => {
+      const res = productGallerySchema.safeParse([sampleImg(1), sampleImg(2), sampleImg(3)]);
+      assert.strictEqual(res.success, true);
+    });
+
+    test("rejects empty photo array (at least 1 photo is mandatory)", () => {
+      const res = productGallerySchema.safeParse([]);
+      assert.strictEqual(res.success, false);
+      if (!res.success) {
+        assert.match(res.error.errors[0]?.message || "", /mandatory/i);
+      }
+    });
+
+    test("rejects more than 3 photos", () => {
+      const res = productGallerySchema.safeParse([
+        sampleImg(1),
+        sampleImg(2),
+        sampleImg(3),
+        sampleImg(4),
+      ]);
+      assert.strictEqual(res.success, false);
+      if (!res.success) {
+        assert.match(res.error.errors[0]?.message || "", /up to 3 photos/i);
+      }
     });
   });
 });

@@ -1,0 +1,231 @@
+[
+  {
+    "_id": "6ad12323710021561030a273",
+    "sku": "NIY-WC-040",
+    "__v": 0,
+    "categoryId": "6adc69da310335f7abad8b6e",
+    "createdAt": "2026-10-15T19:01:57.031Z",
+    "currency": "INR",
+    "description": "Formulated to enhance skin vitality and tone. Rich in emollients that restore hydration and provide an even, illuminated skin texture.",
+    "images": [
+      {
+        "url": "https://images.unsplash.com/photo-1598440947619-2c35fc9aa908?auto=format&fit=crop&w=800&q=80",
+        "publicId": "placeholder/whitening-cream",
+        "alt": "NIYAT Whitening Cream 40g",
+        "sortOrder": 0
+      }
+    ],
+    "ingredients": [],
+    "isFeatured": true,
+    "lowStockThreshold": 10,
+    "name": "Whitening Cream",
+    "ratingAverage": 0,
+    "ratingCount": 0,
+    "regularPricePaise": 59900,
+    "salePricePaise": null,
+    "shortDescription": "Signature skin radiance cream for a luminous, nourished complexion.",
+    "sizeLabel": "40 g",
+    "slug": "whitening-cream",
+    "specifications": {},
+    "status": "ARCHIVED",
+    "stockQuantity": 48,
+    "tags": [
+      "cream",
+      "radiance",
+      "face"
+    ],
+    "updatedAt": "2026-11-04T19:04:13.167Z",
+    "verifiedBenefits": [],
+    "distributorMinQuantity": 10
+  },
+  {
+    "_id": "6ad12323710021561030a274",
+    "sku": "NIY-FW-100",
+    "__v": 0,
+    "categoryId": "6adc69da310335f7abad8b6b",
+    "createdAt": "2026-10-15T19:01:57.119Z",
+    "currency": "INR",
+    "description": "Effectively removes impurities, excess sebum, and environmental residue without stripping essential moisture. Leaves skin refreshed, clear, and balanced.",
+    "images": [
+      {
+        "url": "https://images.unsplash.com/photo-1556228720-195a672e8a03?auto=format&fit=crop&w=800&q=80",
+        "publicId": "placeholder/face-wash",
+        "alt": "NIYAT Face Wash 100g",
+        "sortOrder": 0
+      }
+    ],
+    "ingredients": [],
+    "isFeatured": true,
+    "lowStockThreshold": 15,
+    "name": "Face Wash",
+    "ratingAverage": 0,
+    "ratingCount": 0,
+    "regularPricePaise": 39900,
+    "salePricePaise": null,
+    "shortDescription": "Gentle purifying face wash for refreshing daily cleansing.",
+    "sizeLabel": "100 g",
+    "slug": "face-wash",
+    "specifications": {},
+    "status": "PUBLISHED",
+    "stockQuantity": 79,
+    "tags": [
+      "cleanser",
+      "face wash",
+      "daily"
+    ],
+    "updatedAt": "2026-11-04T05:46:41.952Z",
+    "verifiedBenefits": []
+  },
+  {
+    "_id": "6ad12323710021561030a275",
+    "sku": "NIY-SS-050",
+    "__v": 1,
+    "categoryId": "6adc69da310335f7abad8b74",
+    "createdAt": "2026-10-15T19:01:57.204Z",
+    "currency": "INR",
+    "description": "Shields skin from daily UV exposure while providing smooth, non-sticky hydration suitable for daily wear under makeup or on bare skin.",
+    "images": [
+      {
+        "url": "https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?auto=format&fit=crop&w=800&q=80",
+        "publicId": "placeholder/sunscreen",
+        "alt": "NIYAT Sunscreen 50g",
+        "sortOrder": 0
+      }
+    ],
+    "ingredients": [],
+    "isFeatured": true,
+    "lowStockThreshold": 10,
+    "name": "Sunscreen",
+    "ratingAverage": 0,
+    "ratingCount": 0,
+    "regularPricePaise": 49900,
+    "salePricePaise": null,
+    "shortDescription": "Lightweight broad-spectrum daily sunscreen with non-greasy finish.",
+    "sizeLabel": "50 g",
+    "slug": "sunscreen",
+    "specifications": {},
+    "status": "PUBLISHED",
+    "stockQuantity": 73,
+    "tags": [
+      "sunscreen",
+      "uv protection",
+      "spf"
+    ],
+    "updatedAt": "2026-10-25T07:51:47.273Z",
+    "verifiedBenefits": []
+  },
+  {
+    "_id": "6ad12323710021561030a276",
+    "sku": "NIY-BL-200",
+    "__v": 0,
+    "categoryId": "6ad12323710021561030a271",
+    "createdAt": "2026-10-15T19:01:57.288Z",
+    "currency": "INR",
+    "description": "Formulated with rich skin conditioners to lock in deep moisture, soothe dry patches, and maintain skin suppleness throughout the day.",
+    "images": [
+      {
+        "url": "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=800&q=80",
+        "publicId": "placeholder/body-lotion",
+        "alt": "NIYAT Body Lotion 200g",
+        "sortOrder": 0
+      }
+    ],
+    "ingredients": [],
+    "isFeatured": false,
+    "lowStockThreshold": 10,
+    "name": "Body Lotion",
+    "ratingAverage": 0,
+    "ratingCount": 0,
+    "regularPricePaise": 64900,
+    "salePricePaise": null,
+    "shortDescription": "Ultra-hydrating daily body lotion for velvet-smooth, supple skin.",
+    "sizeLabel": "200 g",
+    "slug": "body-lotion",
+    "specifications": {},
+    "status": "PUBLISHED",
+    "stockQuantity": 60,
+    "tags": [
+      "body",
+      "lotion",
+      "moisture"
+    ],
+    "updatedAt": "2026-10-15T19:05:47.613Z",
+    "verifiedBenefits": []
+  },
+  {
+    "_id": "6ad12324710021561030a277",
+    "sku": "NIY-EWS-003",
+    "__v": 1,
+    "categoryId": "6adc69da310335f7abad8b71",
+    "createdAt": "2026-10-15T19:01:57.364Z",
+    "currency": "INR",
+    "description": "Concentrated elixir targeting dullness and uneven appearance. Ideal for targeted spot radiance and high-impact skin illumination.",
+    "images": [
+      {
+        "url": "https://images.unsplash.com/photo-1601049541289-9b1b7bbbfe19?auto=format&fit=crop&w=800&q=80",
+        "publicId": "placeholder/emergency-serum",
+        "alt": "NIYAT Emergency Whitening Serum 3ml",
+        "sortOrder": 0
+      }
+    ],
+    "ingredients": [],
+    "isFeatured": true,
+    "lowStockThreshold": 20,
+    "name": "Emergency Whitening Serum",
+    "ratingAverage": 0,
+    "ratingCount": 0,
+    "regularPricePaise": 29900,
+    "salePricePaise": null,
+    "shortDescription": "Potent intensive radiance serum ampoule for fast-acting complexion glow.",
+    "sizeLabel": "3 ml",
+    "slug": "emergency-whitening-serum",
+    "specifications": {},
+    "status": "PUBLISHED",
+    "stockQuantity": 148,
+    "tags": [
+      "serum",
+      "radiance",
+      "ampoule"
+    ],
+    "updatedAt": "2026-10-25T07:51:47.158Z",
+    "verifiedBenefits": []
+  },
+  {
+    "_id": "6ad12324710021561030a278",
+    "sku": "NIY-PFS-015",
+    "__v": 0,
+    "categoryId": "6adc69da310335f7abad8b71",
+    "createdAt": "2026-10-15T19:01:57.446Z",
+    "currency": "INR",
+    "description": "Enriched with botanical actives and potent skin conditioners to replenish vital nutrients, diminish tired appearance, and restore youthful radiance.",
+    "images": [
+      {
+        "url": "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&w=800&q=80",
+        "publicId": "placeholder/premium-serum",
+        "alt": "NIYAT Premium Face Serum 15ml",
+        "sortOrder": 0
+      }
+    ],
+    "ingredients": [],
+    "isFeatured": true,
+    "lowStockThreshold": 10,
+    "name": "Premium Face Serum",
+    "ratingAverage": 0,
+    "ratingCount": 0,
+    "regularPricePaise": 79900,
+    "salePricePaise": null,
+    "shortDescription": "Luxury daily anti-dullness face serum for refined, luminous texture.",
+    "sizeLabel": "15 ml",
+    "slug": "premium-face-serum",
+    "specifications": {},
+    "status": "ARCHIVED",
+    "stockQuantity": 38,
+    "tags": [
+      "serum",
+      "luxury",
+      "anti-dullness"
+    ],
+    "updatedAt": "2026-10-24T09:25:05.471Z",
+    "verifiedBenefits": []
+  }
+]
