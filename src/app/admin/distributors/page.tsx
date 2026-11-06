@@ -3,6 +3,7 @@
 import React, { useEffect, useState, useMemo } from "react";
 import Image from "next/image";
 import { formatPaise } from "@/lib/utils";
+import { adminRawFetch as adminFetch } from "@/lib/api/admin-client";
 import {
   Building2,
   Plus,
@@ -184,14 +185,6 @@ export default function AdminDistributorsPage() {
   const [batchDiscountPercent, setBatchDiscountPercent] = useState("35");
   const [batchMinQty, setBatchMinQty] = useState("10");
 
-  const adminFetch = (url: string, options: RequestInit = {}) => {
-    const headers = new Headers(options.headers || {});
-    if (process.env.NODE_ENV === "development") {
-      headers.set("x-dev-admin", "true");
-      headers.set("Authorization", "Bearer dev-admin-session");
-    }
-    return fetch(url, { ...options, headers });
-  };
 
   const loadDistributors = async () => {
     setLoadingDistributors(true);

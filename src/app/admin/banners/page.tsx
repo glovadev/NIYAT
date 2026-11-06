@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { adminRawFetch as adminFetch } from "@/lib/api/admin-client";
 import {
   SlidersHorizontal,
   Plus,
@@ -98,14 +99,6 @@ export default function AdminBannersPage() {
   const [formMobileFit, setFormMobileFit] = useState<"CONTAIN" | "COVER">("CONTAIN");
   const [previewDevice, setPreviewDevice] = useState<"DESKTOP" | "MOBILE">("DESKTOP");
 
-  const adminFetch = (url: string, options: RequestInit = {}) => {
-    const headers = new Headers(options.headers || {});
-    if (process.env.NODE_ENV === "development") {
-      headers.set("x-dev-admin", "true");
-      headers.set("Authorization", "Bearer dev-admin-session");
-    }
-    return fetch(url, { ...options, headers });
-  };
 
   const loadBanners = async (placementFilter?: "HOME_HERO" | "HOME_PROMO" | "ALL") => {
     const targetFilter = placementFilter !== undefined ? placementFilter : activePlacementFilter;

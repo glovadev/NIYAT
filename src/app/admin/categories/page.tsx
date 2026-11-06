@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { adminRawFetch as adminFetch } from "@/lib/api/admin-client";
 import {
   FolderTree,
   Plus,
@@ -54,14 +55,6 @@ export default function AdminCategoriesPage() {
   const [formSortOrder, setFormSortOrder] = useState("0");
   const [formStatus, setFormStatus] = useState<"ACTIVE" | "ARCHIVED">("ACTIVE");
 
-  const adminFetch = (url: string, options: RequestInit = {}) => {
-    const headers = new Headers(options.headers || {});
-    if (process.env.NODE_ENV === "development") {
-      headers.set("x-dev-admin", "true");
-      headers.set("Authorization", "Bearer dev-admin-session");
-    }
-    return fetch(url, { ...options, headers });
-  };
 
   const loadCategories = async () => {
     setLoading(true);

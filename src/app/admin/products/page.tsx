@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { formatPaise } from "@/lib/utils";
+import { adminRawFetch as adminFetch } from "@/lib/api/admin-client";
 import {
   Package,
   Plus,
@@ -87,14 +88,6 @@ export default function AdminProductsPage() {
   const [deletingProduct, setDeletingProduct] = useState<AdminProductItem | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const adminFetch = (url: string, options: RequestInit = {}) => {
-    const headers = new Headers(options.headers || {});
-    if (process.env.NODE_ENV === "development") {
-      headers.set("x-dev-admin", "true");
-      headers.set("Authorization", "Bearer dev-admin-session");
-    }
-    return fetch(url, { ...options, headers });
-  };
 
   const loadProducts = async () => {
     setLoading(true);

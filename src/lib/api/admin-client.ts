@@ -3,18 +3,16 @@
 import { auth } from "@/lib/firebase/client";
 
 /**
- * Universal safe fetcher for administrative operations.
- * Automatically injects Firebase Auth bearer token (or local dev bypass headers),
- * and safely handles HTML/500/404 server responses so it never throws:
- * "Unexpected token '<', '<!DOCTYPE '... is not valid JSON".
+ * Prepares HTTP headers for administrative requests.
+ * Injects Firebase ID token if available, and dev bypass headers in development.
  */
-export async function adminFetch<T = any>(
-  url: string,
-  options: RequestInit = {}
-): Promise<{ ok: boolean; status: number; data?: T; error?: { message: string; code?: string } }> {
-  const headers = new Headers(options.headers || {});
+export async function getAdminHeaders(initHeaders?: HeadersInit): Promise<Headers> {
+  const headers = new Headers(initHeaders || {});
 
   try {
+    if (auth && typeof (auth as any).authStateReady === "function") {
+      await (auth as any).authStateReady();
+    }
     const currentUser = auth?.currentUser;
     if (currentUser) {
       const idToken = await currentUser.getIdToken();
@@ -32,11 +30,37 @@ export async function adminFetch<T = any>(
     headers.set("Authorization", "Bearer dev-admin-session");
   }
 
+  return headers;
+}
+
+/**
+ * Raw fetch wrapper for admin requests that preserves standard Response interface,
+ * with automatic credentials: "include" and Authorization Bearer token injection.
+ */
+export async function adminRawFetch(
+  url: string,
+  options: RequestInit = {}
+): Promise<Response> {
+  const headers = await getAdminHeaders(options.headers);
+  return fetch(url, {
+    credentials: "include",
+    ...options,
+    headers,
+  });
+}
+
+/**
+ * Universal safe fetcher for administrative operations.
+ * Automatically injects Firebase Auth bearer token (or local dev bypass headers),
+ * and safely handles HTML/500/404 server responses so it never throws:
+ * "Unexpected token '<', '<!DOCTYPE '... is not valid JSON".
+ */
+export async function adminFetch<T = any>(
+  url: string,
+  options: RequestInit = {}
+): Promise<{ ok: boolean; status: number; data?: T; error?: { message: string; code?: string } }> {
   try {
-    const res = await fetch(url, {
-      ...options,
-      headers,
-    });
+    const res = await adminRawFetch(url, options);
 
     const contentType = res.headers.get("content-type") || "";
     if (!contentType.includes("application/json")) {

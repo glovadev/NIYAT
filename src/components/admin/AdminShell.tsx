@@ -75,9 +75,11 @@ export function AdminShell({ children }: AdminShellProps) {
       } catch (_) {}
     }
 
-    fetch("/api/me")
-      .then((r) => r.json())
-      .then((json) => {
+    const checkServerSession = async () => {
+      try {
+        const { adminRawFetch } = await import("@/lib/api/admin-client");
+        const res = await adminRawFetch("/api/me");
+        const json = await res.json();
         if (json.success && (json.data?.role === "ADMIN" || json.data?.role === "STAFF")) {
           setServerAdmin(json.data);
           if (process.env.NODE_ENV === "development") {
@@ -87,8 +89,9 @@ export function AdminShell({ children }: AdminShellProps) {
             } catch (_) {}
           }
         }
-      })
-      .catch(() => {});
+      } catch (_) {}
+    };
+    checkServerSession();
   }, []);
 
   // Quick login form states for unauthenticated admins
@@ -102,9 +105,38 @@ export function AdminShell({ children }: AdminShellProps) {
     setAuthError(null);
     setAuthSubmitting(true);
     try {
+      // 1. Direct server admin login first (instant access with Master password)
+      const res = await fetch("/api/auth/admin-login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: adminEmail.trim(), password: adminPassword }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setServerAdmin(data.data.profile);
+        window.location.reload();
+        return;
+      }
+
+      // 2. Fallback to Firebase client login
       await loginWithEmail(adminEmail.trim(), adminPassword);
+      window.location.reload();
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Authentication failed";
+      setAuthError(msg);
+    } finally {
+      setAuthSubmitting(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    setAuthError(null);
+    setAuthSubmitting(true);
+    try {
+      await loginWithGoogle();
+      window.location.reload();
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Google sign in failed";
       setAuthError(msg);
     } finally {
       setAuthSubmitting(false);
@@ -148,7 +180,24 @@ export function AdminShell({ children }: AdminShellProps) {
     window.location.href = "/admin";
   };
 
-  const isAuthenticated = Boolean(user || serverAdmin);
+  const isOwnerEmail =
+    (user?.email &&
+      (user.email.toLowerCase() === "mainhasan553@gmail.com" ||
+        user.email.toLowerCase() === "admin@niyat.com" ||
+        user.email.toLowerCase() === "operations@niyat.com")) ||
+    (serverAdmin?.email &&
+      (serverAdmin.email.toLowerCase() === "mainhasan553@gmail.com" ||
+        serverAdmin.email.toLowerCase() === "admin@niyat.com" ||
+        serverAdmin.email.toLowerCase() === "operations@niyat.com"));
+
+  const isAdminRole =
+    profile?.role === "ADMIN" ||
+    profile?.role === "STAFF" ||
+    serverAdmin?.role === "ADMIN" ||
+    serverAdmin?.role === "STAFF" ||
+    Boolean(isOwnerEmail);
+
+  const isAuthenticated = Boolean((user || serverAdmin) && isAdminRole);
 
   // If user is not logged in, show polished Admin Sign In view
   if (!isAuthenticated) {
@@ -192,8 +241,9 @@ export function AdminShell({ children }: AdminShellProps) {
 
           <button
             type="button"
-            onClick={() => loginWithGoogle()}
-            className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-xl bg-slate-800 hover:bg-slate-750 text-white border border-slate-700 hover:border-slate-600 transition text-sm font-medium shadow-sm mb-6"
+            disabled={authSubmitting}
+            onClick={handleGoogleLogin}
+            className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-xl bg-slate-800 hover:bg-slate-750 text-white border border-slate-700 hover:border-slate-600 transition text-sm font-medium shadow-sm mb-6 disabled:opacity-50"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24">
               <path

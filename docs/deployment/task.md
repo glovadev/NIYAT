@@ -320,3 +320,4 @@ npm run build
 sudo systemctl restart niyat
 ```
 *(Your store reloads in ~1 second with all product databases and uploaded photos completely intact!)*
+

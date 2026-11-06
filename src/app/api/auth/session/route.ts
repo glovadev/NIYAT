@@ -24,15 +24,23 @@ export async function POST(req: NextRequest) {
     await connectToDatabase();
     let profile = await UserProfile.findOne({ firebaseUid: decoded.uid });
 
+    const isOwnerEmail =
+      decoded.email &&
+      (decoded.email.toLowerCase() === "mainhasan553@gmail.com" ||
+        decoded.email.toLowerCase() === "admin@niyat.com");
+
     if (!profile) {
       profile = await UserProfile.create({
         firebaseUid: decoded.uid,
-        name: decoded.name || decoded.email?.split("@")[0] || "Customer",
+        name: decoded.name || decoded.email?.split("@")[0] || "Administrator",
         email: decoded.email,
-        role: "CUSTOMER",
+        role: isOwnerEmail ? "ADMIN" : "CUSTOMER",
         status: "ACTIVE",
         communicationPreferences: { marketingEmail: false },
       });
+    } else if (isOwnerEmail && profile.role !== "ADMIN") {
+      profile.role = "ADMIN";
+      await profile.save();
     }
 
     if (profile.status === "DISABLED") {

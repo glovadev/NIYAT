@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { formatPaise } from "@/lib/utils";
 import { adminFetch } from "@/lib/api/admin-client";
+import { useAuth } from "@/lib/auth/auth-context";
 import {
   TrendingUp,
   ShoppingBag,
@@ -41,6 +42,7 @@ interface RecentOrder {
 }
 
 export default function AdminDashboardPage() {
+  const { user } = useAuth();
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
   const [recentOrders, setRecentOrders] = useState<RecentOrder[]>([]);
   const [loading, setLoading] = useState(true);
@@ -71,7 +73,7 @@ export default function AdminDashboardPage() {
 
   useEffect(() => {
     loadDashboardData();
-  }, []);
+  }, [user]);
 
   return (
     <div className="space-y-8">
