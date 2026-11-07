@@ -38,7 +38,7 @@ export function sanitizeMongoUri(rawUri?: string): string {
  * @returns {Promise<Mongoose>} Active Mongoose instance
  */
 export async function connectToDatabase(): Promise<Mongoose> {
-  const uri = process.env.MONGODB_URI;
+  const uri = process.env.MONGODB_URI?.trim();
 
   if (!uri) {
     throw new Error(

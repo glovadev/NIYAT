@@ -20,11 +20,15 @@ export async function POST(req: NextRequest) {
 
     await connectToDatabase();
 
-    // Check store owner / admin recognized accounts
-    const isOwner =
-      email === "mainhasan553@gmail.com" ||
-      email === "admin@niyat.com" ||
-      email === "operations@niyat.com";
+    // Recognized store owner / admin accounts
+    const recognizedAdminEmails = [
+      "mainhasan553@gmail.com",
+      "niyatadmin@gmail.com",
+      "admin@niyat.com",
+      "operations@niyat.com",
+    ];
+
+    const isRecognizedAdmin = recognizedAdminEmails.includes(email);
 
     // Standard configured master password from environment (or default master password)
     const configuredMasterPassword = process.env.ADMIN_PASSWORD || "Niyat@2026!";
@@ -32,18 +36,18 @@ export async function POST(req: NextRequest) {
     let profile = await UserProfile.findOne({ email });
 
     if (!profile) {
-      if (isOwner) {
-        // Auto-provision owner profile
+      if (isRecognizedAdmin) {
+        // Auto-provision owner/admin profile
         profile = await UserProfile.create({
           firebaseUid: `admin_${Date.now()}`,
-          name: "NIYAT Store Administrator",
+          name: email.split("@")[0].toUpperCase() + " (Admin)",
           email,
           role: "ADMIN",
           status: "ACTIVE",
           communicationPreferences: { marketingEmail: false },
         });
       } else {
-        return apiError("UNAUTHORIZED", "Invalid admin credentials", 401);
+        return apiError("UNAUTHORIZED", "Invalid administrator credentials", 401);
       }
     }
 
@@ -64,8 +68,8 @@ export async function POST(req: NextRequest) {
       return apiError("UNAUTHORIZED", "Invalid admin email or security password", 401);
     }
 
-    // Ensure ADMIN role
-    if (profile.role !== "ADMIN" && isOwner) {
+    // Ensure recognized admin accounts have ADMIN role
+    if (isRecognizedAdmin && profile.role !== "ADMIN") {
       profile.role = "ADMIN";
       await profile.save();
     }
@@ -114,3 +118,4 @@ export async function POST(req: NextRequest) {
     return apiError("INTERNAL_ERROR", msg, 500);
   }
 }
+

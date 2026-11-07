@@ -35,9 +35,11 @@ export async function requireAdmin(
   const isOwnerEmail =
     profile.email &&
     (profile.email.toLowerCase() === "mainhasan553@gmail.com" ||
-      profile.email.toLowerCase() === "admin@niyat.com");
+      profile.email.toLowerCase() === "niyatadmin@gmail.com" ||
+      profile.email.toLowerCase() === "admin@niyat.com" ||
+      profile.email.toLowerCase() === "operations@niyat.com");
 
-  if (profile.role === "CUSTOMER" && (process.env.NODE_ENV === "development" || isOwnerEmail)) {
+  if (profile.role !== "ADMIN" && (process.env.NODE_ENV === "development" || isOwnerEmail)) {
     profile.role = "ADMIN";
     await profile.save();
   }

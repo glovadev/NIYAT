@@ -60,8 +60,18 @@ export function AdminShell({ children }: AdminShellProps) {
     return () => clearTimeout(timer);
   }, []);
 
-  // Check if session cookie is already active on the server or in dev storage
+  // Check if session cookie is already active on the server or in client storage
   useEffect(() => {
+    try {
+      const cachedAdmin = localStorage.getItem("niyat_admin_session");
+      if (cachedAdmin) {
+        const parsed = JSON.parse(cachedAdmin);
+        if (parsed && (parsed.role === "ADMIN" || parsed.role === "STAFF")) {
+          setServerAdmin(parsed);
+        }
+      }
+    } catch (_) {}
+
     if (typeof window !== "undefined" && process.env.NODE_ENV === "development") {
       try {
         const cached = localStorage.getItem("niyat_dev_admin");
@@ -82,6 +92,9 @@ export function AdminShell({ children }: AdminShellProps) {
         const json = await res.json();
         if (json.success && (json.data?.role === "ADMIN" || json.data?.role === "STAFF")) {
           setServerAdmin(json.data);
+          try {
+            localStorage.setItem("niyat_admin_session", JSON.stringify(json.data));
+          } catch (_) {}
           if (process.env.NODE_ENV === "development") {
             try {
               localStorage.setItem("niyat_dev_admin", JSON.stringify(json.data));
@@ -113,9 +126,16 @@ export function AdminShell({ children }: AdminShellProps) {
       });
       const data = await res.json();
       if (res.ok && data.success) {
+        try {
+          localStorage.setItem("niyat_admin_session", JSON.stringify(data.data.profile));
+        } catch (_) {}
         setServerAdmin(data.data.profile);
         window.location.reload();
         return;
+      }
+
+      if (data?.error?.message) {
+        throw new Error(data.error.message);
       }
 
       // 2. Fallback to Firebase client login
@@ -168,6 +188,7 @@ export function AdminShell({ children }: AdminShellProps) {
   const handleLogout = async () => {
     setServerAdmin(null);
     try {
+      localStorage.removeItem("niyat_admin_session");
       localStorage.removeItem("niyat_dev_admin");
       document.cookie = "__session=; path=/; max-age=0;";
     } catch (_) {}
@@ -183,10 +204,12 @@ export function AdminShell({ children }: AdminShellProps) {
   const isOwnerEmail =
     (user?.email &&
       (user.email.toLowerCase() === "mainhasan553@gmail.com" ||
+        user.email.toLowerCase() === "niyatadmin@gmail.com" ||
         user.email.toLowerCase() === "admin@niyat.com" ||
         user.email.toLowerCase() === "operations@niyat.com")) ||
     (serverAdmin?.email &&
       (serverAdmin.email.toLowerCase() === "mainhasan553@gmail.com" ||
+        serverAdmin.email.toLowerCase() === "niyatadmin@gmail.com" ||
         serverAdmin.email.toLowerCase() === "admin@niyat.com" ||
         serverAdmin.email.toLowerCase() === "operations@niyat.com"));
 

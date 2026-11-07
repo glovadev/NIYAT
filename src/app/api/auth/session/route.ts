@@ -22,12 +22,16 @@ export async function POST(req: NextRequest) {
 
     // Connect to DB and sync UserProfile
     await connectToDatabase();
-    let profile = await UserProfile.findOne({ firebaseUid: decoded.uid });
+    let profile = await UserProfile.findOne({
+      $or: [{ firebaseUid: decoded.uid }, ...(decoded.email ? [{ email: decoded.email }] : [])],
+    });
 
     const isOwnerEmail =
       decoded.email &&
       (decoded.email.toLowerCase() === "mainhasan553@gmail.com" ||
-        decoded.email.toLowerCase() === "admin@niyat.com");
+        decoded.email.toLowerCase() === "niyatadmin@gmail.com" ||
+        decoded.email.toLowerCase() === "admin@niyat.com" ||
+        decoded.email.toLowerCase() === "operations@niyat.com");
 
     if (!profile) {
       profile = await UserProfile.create({
@@ -38,8 +42,13 @@ export async function POST(req: NextRequest) {
         status: "ACTIVE",
         communicationPreferences: { marketingEmail: false },
       });
-    } else if (isOwnerEmail && profile.role !== "ADMIN") {
-      profile.role = "ADMIN";
+    } else {
+      if (profile.firebaseUid !== decoded.uid) {
+        profile.firebaseUid = decoded.uid;
+      }
+      if (isOwnerEmail && profile.role !== "ADMIN") {
+        profile.role = "ADMIN";
+      }
       await profile.save();
     }
 
