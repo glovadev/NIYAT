@@ -18,6 +18,10 @@ export async function GET() {
       currency: settings.currency,
       freeShippingThresholdPaise: settings.freeShippingThresholdPaise,
       standardShippingFeePaise: settings.standardShippingFeePaise,
+      isFreeDeliveryOfferActive: Boolean(settings.isFreeDeliveryOfferActive),
+      freeDeliveryBannerText:
+        settings.freeDeliveryBannerText ||
+        "Special Offer: Complimentary Free Delivery Active on All Orders!",
       codEnabled: settings.codEnabled,
       codMinOrderPaise: settings.codMinOrderPaise,
       codMaxOrderPaise: settings.codMaxOrderPaise,

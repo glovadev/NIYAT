@@ -179,6 +179,31 @@ export default function CheckoutPage() {
       .catch(() => {});
   }, [items, appliedCoupon, paymentMethod]);
 
+  const [shippingConfig, setShippingConfig] = useState<{
+    freeShippingThresholdPaise: number;
+    standardShippingFeePaise: number;
+    isFreeDeliveryOfferActive: boolean;
+  }>({
+    freeShippingThresholdPaise: 99900,
+    standardShippingFeePaise: 9900,
+    isFreeDeliveryOfferActive: false,
+  });
+
+  useEffect(() => {
+    fetch("/api/site-settings/public")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.success && data?.data) {
+          setShippingConfig({
+            freeShippingThresholdPaise: data.data.freeShippingThresholdPaise ?? 99900,
+            standardShippingFeePaise: data.data.standardShippingFeePaise ?? 9900,
+            isFreeDeliveryOfferActive: Boolean(data.data.isFreeDeliveryOfferActive),
+          });
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   // Live Calculations (in integer paise)
   const fallbackSubtotal = items.reduce(
     (sum, item) => sum + getItemEffectivePrice(item) * item.quantity,
@@ -187,13 +212,13 @@ export default function CheckoutPage() {
   const subtotalPaise = serverQuote?.subtotalPaise ?? fallbackSubtotal;
   const activeDiscountPaise = serverQuote?.discountPaise ?? couponDiscount;
   const netAfterDiscount = Math.max(0, subtotalPaise - activeDiscountPaise);
-  const freeShippingThreshold = 99900; // ₹999
   const shippingFeePaise =
     serverQuote !== null
       ? serverQuote.shippingFeePaise
-      : netAfterDiscount >= freeShippingThreshold
+      : shippingConfig.isFreeDeliveryOfferActive ||
+        netAfterDiscount >= shippingConfig.freeShippingThresholdPaise
       ? 0
-      : 9900; // ₹99
+      : shippingConfig.standardShippingFeePaise;
   const taxPaise = Math.round((netAfterDiscount * 18) / 118);
   const grandTotalPaise = serverQuote?.grandTotalPaise ?? (netAfterDiscount + shippingFeePaise);
 
@@ -865,7 +890,9 @@ export default function CheckoutPage() {
                   <span>Standard Shipping</span>
                   {shippingFeePaise === 0 ? (
                     <span className="text-emerald-700 font-semibold uppercase text-[11px]">
-                      Complimentary Free
+                      {shippingConfig.isFreeDeliveryOfferActive
+                        ? "Free Delivery Offer"
+                        : "Complimentary Free"}
                     </span>
                   ) : (
                     <span className="font-medium text-niyat-charcoal">

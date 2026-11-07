@@ -11,11 +11,41 @@ export function CartDrawer() {
   const { items, removeItem, updateQuantity, isCartOpen, setIsCartOpen, subtotalPaise, totalCount } =
     useCart();
 
+  const [shippingPolicy, setShippingPolicy] = React.useState<{
+    freeShippingThresholdPaise: number;
+    standardShippingFeePaise: number;
+    isFreeDeliveryOfferActive: boolean;
+    freeDeliveryBannerText?: string;
+  }>({
+    freeShippingThresholdPaise: 99900,
+    standardShippingFeePaise: 9900,
+    isFreeDeliveryOfferActive: false,
+  });
+
+  React.useEffect(() => {
+    fetch("/api/site-settings/public")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.success && data?.data) {
+          setShippingPolicy({
+            freeShippingThresholdPaise: data.data.freeShippingThresholdPaise ?? 99900,
+            standardShippingFeePaise: data.data.standardShippingFeePaise ?? 9900,
+            isFreeDeliveryOfferActive: Boolean(data.data.isFreeDeliveryOfferActive),
+            freeDeliveryBannerText: data.data.freeDeliveryBannerText,
+          });
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   if (!isCartOpen) return null;
 
-  const freeShippingThreshold = 99900; // ₹999
-  const amountNeeded = Math.max(0, freeShippingThreshold - subtotalPaise);
-  const freeShippingPercent = Math.min(100, Math.round((subtotalPaise / freeShippingThreshold) * 100));
+  const isFreeOffer = shippingPolicy.isFreeDeliveryOfferActive;
+  const freeShippingThreshold = shippingPolicy.freeShippingThresholdPaise;
+  const amountNeeded = isFreeOffer ? 0 : Math.max(0, freeShippingThreshold - subtotalPaise);
+  const freeShippingPercent = isFreeOffer
+    ? 100
+    : Math.min(100, Math.round((subtotalPaise / freeShippingThreshold) * 100));
 
   return (
     <div className="fixed inset-0 z-50 overflow-hidden">
@@ -46,7 +76,11 @@ export function CartDrawer() {
 
           {/* Free Shipping Progress */}
           <div className="px-6 py-3 bg-niyat-gold-subtle border-b border-niyat-gold/20 text-xs">
-            {amountNeeded > 0 ? (
+            {isFreeOffer ? (
+              <p className="font-semibold text-niyat-emerald flex items-center">
+                ✨ {shippingPolicy.freeDeliveryBannerText || "Special Promotion: Free Delivery Active on All Orders!"}
+              </p>
+            ) : amountNeeded > 0 ? (
               <p className="text-niyat-charcoal">
                 Add <span className="font-bold text-niyat-emerald">{formatPaise(amountNeeded)}</span> more to unlock{" "}
                 <span className="font-semibold text-niyat-gold-dark">Free Complimentary Shipping</span>
@@ -164,7 +198,7 @@ export function CartDrawer() {
               </div>
               <div className="flex justify-between text-xs text-niyat-charcoal-muted mb-4">
                 <span>Estimated Shipping</span>
-                <span>{subtotalPaise >= freeShippingThreshold ? "Free" : "Calculated at checkout"}</span>
+                <span>{isFreeOffer || subtotalPaise >= freeShippingThreshold ? "Free" : "Calculated at checkout"}</span>
               </div>
 
               <Link

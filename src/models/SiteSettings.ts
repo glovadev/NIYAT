@@ -6,6 +6,8 @@ export interface ISiteSettings extends Document {
   currency: "INR";
   freeShippingThresholdPaise: number;
   standardShippingFeePaise: number;
+  isFreeDeliveryOfferActive: boolean;
+  freeDeliveryBannerText?: string;
   codEnabled: boolean;
   codMinOrderPaise: number;
   codMaxOrderPaise: number;
@@ -30,6 +32,11 @@ const SiteSettingsSchema = new Schema<ISiteSettings>(
     currency: { type: String, default: "INR", enum: ["INR"] },
     freeShippingThresholdPaise: { type: Number, default: 99900 }, // Free above ₹999
     standardShippingFeePaise: { type: Number, default: 9900 }, // ₹99 standard shipping
+    isFreeDeliveryOfferActive: { type: Boolean, default: false }, // Store-wide free delivery promotion
+    freeDeliveryBannerText: {
+      type: String,
+      default: "Limited Time: Complimentary Free Delivery on All Orders!",
+    },
     codEnabled: { type: Boolean, default: true },
     codMinOrderPaise: { type: Number, default: 30000 }, // ₹300 min for COD
     codMaxOrderPaise: { type: Number, default: 300000 }, // ₹3,000 max for COD

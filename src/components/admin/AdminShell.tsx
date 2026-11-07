@@ -25,6 +25,7 @@ import {
   CheckCircle2,
   Lock,
   Building2,
+  Truck,
 } from "lucide-react";
 
 interface AdminShellProps {
@@ -41,6 +42,7 @@ const navLinks = [
   { name: "Inventory Control", href: "/admin/inventory", icon: Boxes },
   { name: "Customer Reviews", href: "/admin/reviews", icon: Star },
   { name: "Promotions & Coupons", href: "/admin/coupons", icon: TicketPercent },
+  { name: "Shipping & Delivery", href: "/admin/shipping", icon: Truck },
 ];
 
 export function AdminShell({ children }: AdminShellProps) {

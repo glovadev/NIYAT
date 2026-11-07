@@ -72,6 +72,7 @@ export async function calculateCartQuote(
   const settings = await SiteSettings.findOne({ key: "default" }).lean();
   const freeShippingThreshold = settings?.freeShippingThresholdPaise ?? 99900; // ₹999
   const standardShippingFee = settings?.standardShippingFeePaise ?? 9900; // ₹99
+  const isFreeDeliveryOfferActive = settings?.isFreeDeliveryOfferActive ?? false;
 
   // Deduplicate and aggregate quantities by productId
   const aggregated = new Map<string, number>();
@@ -192,7 +193,12 @@ export async function calculateCartQuote(
   // Shipping calculation
   const netSubtotal = Math.max(0, subtotalPaise - discountPaise);
   let shippingFeePaise = 0;
-  if (quotedItems.length > 0 && netSubtotal < freeShippingThreshold) {
+  if (
+    quotedItems.length > 0 &&
+    !isFreeDeliveryOfferActive &&
+    standardShippingFee > 0 &&
+    netSubtotal < freeShippingThreshold
+  ) {
     shippingFeePaise = standardShippingFee;
   }
 

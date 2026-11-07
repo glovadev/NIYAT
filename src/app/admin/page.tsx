@@ -209,7 +209,7 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* Quick Navigation Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         <Link
           href="/admin/banners"
           className="p-4 rounded-xl bg-slate-950/40 border border-slate-800/80 hover:border-amber-400/40 hover:bg-slate-850 transition group flex flex-col justify-between"
@@ -272,6 +272,19 @@ export default function AdminDashboardPage() {
           <div>
             <div className="text-xs font-semibold text-white">Promotions</div>
             <div className="text-[11px] text-slate-400">Coupons & discounts</div>
+          </div>
+        </Link>
+
+        <Link
+          href="/admin/shipping"
+          className="p-4 rounded-xl bg-slate-950/40 border border-slate-800/80 hover:border-amber-400/40 hover:bg-slate-850 transition group flex flex-col justify-between"
+        >
+          <div className="w-8 h-8 rounded-lg bg-slate-800 text-slate-300 flex items-center justify-center mb-3 group-hover:text-amber-400">
+            <Truck className="w-4 h-4" />
+          </div>
+          <div>
+            <div className="text-xs font-semibold text-white">Delivery Rules</div>
+            <div className="text-[11px] text-slate-400">Fees & Free Delivery</div>
           </div>
         </Link>
       </div>
