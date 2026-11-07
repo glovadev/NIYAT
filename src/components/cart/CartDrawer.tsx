@@ -91,6 +91,7 @@ export function CartDrawer() {
                         src={item.imageUrl}
                         alt={item.name}
                         fill
+                        unoptimized
                         className="object-cover"
                         sizes="80px"
                       />

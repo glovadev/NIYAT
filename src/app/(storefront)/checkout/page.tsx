@@ -136,16 +136,66 @@ export default function CheckoutPage() {
     }
   };
 
+  // Helper to get effective unit price for an item (sale price if active, otherwise effective or regular price)
+  const getItemEffectivePrice = (item: (typeof items)[0]) => {
+    if (item.salePricePaise && item.salePricePaise < item.regularPricePaise) {
+      return item.salePricePaise;
+    }
+    return item.effectivePricePaise || item.regularPricePaise;
+  };
+
+  // Synchronize authoritative pricing quote directly from server
+  const [serverQuote, setServerQuote] = useState<{
+    subtotalPaise: number;
+    discountPaise: number;
+    shippingFeePaise: number;
+    grandTotalPaise: number;
+  } | null>(null);
+
+  useEffect(() => {
+    if (items.length === 0) {
+      setServerQuote(null);
+      return;
+    }
+    safeJsonFetch("/api/checkout/validate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        items: items.map((i) => ({ productId: i.productId, quantity: i.quantity })),
+        couponCode: appliedCoupon || undefined,
+        paymentMethod,
+      }),
+    })
+      .then(({ ok, data }) => {
+        if (ok && data.success && data.data) {
+          setServerQuote({
+            subtotalPaise: data.data.subtotalPaise,
+            discountPaise: data.data.discountPaise,
+            shippingFeePaise: data.data.shippingFeePaise,
+            grandTotalPaise: data.data.grandTotalPaise,
+          });
+        }
+      })
+      .catch(() => {});
+  }, [items, appliedCoupon, paymentMethod]);
+
   // Live Calculations (in integer paise)
-  const subtotalPaise = items.reduce(
-    (sum, item) => sum + item.regularPricePaise * item.quantity,
+  const fallbackSubtotal = items.reduce(
+    (sum, item) => sum + getItemEffectivePrice(item) * item.quantity,
     0
   );
-  const netAfterDiscount = Math.max(0, subtotalPaise - couponDiscount);
+  const subtotalPaise = serverQuote?.subtotalPaise ?? fallbackSubtotal;
+  const activeDiscountPaise = serverQuote?.discountPaise ?? couponDiscount;
+  const netAfterDiscount = Math.max(0, subtotalPaise - activeDiscountPaise);
   const freeShippingThreshold = 99900; // ₹999
-  const shippingFeePaise = netAfterDiscount >= freeShippingThreshold ? 0 : 9900; // ₹99
+  const shippingFeePaise =
+    serverQuote !== null
+      ? serverQuote.shippingFeePaise
+      : netAfterDiscount >= freeShippingThreshold
+      ? 0
+      : 9900; // ₹99
   const taxPaise = Math.round((netAfterDiscount * 18) / 118);
-  const grandTotalPaise = netAfterDiscount + shippingFeePaise;
+  const grandTotalPaise = serverQuote?.grandTotalPaise ?? (netAfterDiscount + shippingFeePaise);
 
   // Coupon application
   const handleApplyCoupon = async (e: React.FormEvent) => {
@@ -706,36 +756,48 @@ export default function CheckoutPage() {
 
               {/* Items List */}
               <div className="space-y-4 max-h-60 overflow-y-auto pr-1">
-                {items.map((item) => (
-                  <div key={item.productId} className="flex items-center gap-3 text-xs">
-                    <div className="relative w-12 h-12 rounded-xl bg-neutral-50 border border-niyat-ivory-border/60 overflow-hidden flex-shrink-0">
-                      {item.imageUrl ? (
-                        <Image
-                          src={item.imageUrl}
-                          alt={item.name}
-                          fill
-                          sizes="48px"
-                          className="object-contain p-1"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-niyat-muted">
-                          •
-                        </div>
-                      )}
+                {items.map((item) => {
+                  const effectiveUnitPrice = getItemEffectivePrice(item);
+                  const hasDiscount = item.salePricePaise && item.salePricePaise < item.regularPricePaise;
+                  return (
+                    <div key={item.productId} className="flex items-center gap-3 text-xs">
+                      <div className="relative w-12 h-12 rounded-xl bg-neutral-50 border border-niyat-ivory-border/60 overflow-hidden flex-shrink-0">
+                        {item.imageUrl ? (
+                          <Image
+                            src={item.imageUrl}
+                            alt={item.name}
+                            fill
+                            unoptimized
+                            sizes="48px"
+                            className="object-contain p-1"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-niyat-muted">
+                            •
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-semibold text-niyat-charcoal truncate">
+                          {item.name}
+                        </h4>
+                        <p className="text-niyat-muted text-[11px]">
+                          Qty: {item.quantity} • {item.sizeLabel}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <span className="font-serif font-bold text-niyat-charcoal">
+                          {formatPaise(effectiveUnitPrice * item.quantity)}
+                        </span>
+                        {hasDiscount && (
+                          <span className="block text-[10px] text-stone-400 line-through">
+                            {formatPaise(item.regularPricePaise * item.quantity)}
+                          </span>
+                        )}
+                      </div>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <h4 className="font-semibold text-niyat-charcoal truncate">
-                        {item.name}
-                      </h4>
-                      <p className="text-niyat-muted text-[11px]">
-                        Qty: {item.quantity} • {item.sizeLabel}
-                      </p>
-                    </div>
-                    <span className="font-serif font-bold text-niyat-charcoal">
-                      {formatPaise(item.regularPricePaise * item.quantity)}
-                    </span>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
 
               {/* Coupon Input */}

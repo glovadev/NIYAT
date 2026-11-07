@@ -103,6 +103,7 @@ export function ProductInteractive({ product }: ProductInteractiveProps) {
             src={activeImage.url}
             alt={activeImage.alt || product.name}
             fill
+            unoptimized
             sizes="(max-width: 1024px) 100vw, 50vw"
             priority
             className="object-contain p-6 transition-transform duration-500 group-hover:scale-105"
@@ -146,6 +147,7 @@ export function ProductInteractive({ product }: ProductInteractiveProps) {
                   src={img.url}
                   alt={img.alt || `${product.name} view ${idx + 1}`}
                   fill
+                  unoptimized
                   sizes="80px"
                   className="object-contain p-1.5"
                 />

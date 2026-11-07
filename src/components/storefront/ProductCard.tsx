@@ -158,6 +158,7 @@ export function ProductCard(props: ProductCardComponentProps) {
             src={imageUrl}
             alt={name}
             fill
+            unoptimized
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
             className="object-contain p-2 sm:p-3 group-hover:scale-108 transition-transform duration-500"
           />
