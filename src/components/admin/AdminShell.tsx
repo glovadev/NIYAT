@@ -101,6 +101,13 @@ export function AdminShell({ children }: AdminShellProps) {
               document.cookie = "__session=dev-admin-session; path=/; max-age=604800; SameSite=Lax";
             } catch (_) {}
           }
+        } else {
+          // Stale or unauthenticated session: clear from client storage
+          try {
+            localStorage.removeItem("niyat_admin_session");
+            localStorage.removeItem("niyat_admin_token");
+          } catch (_) {}
+          setServerAdmin(null);
         }
       } catch (_) {}
     };
@@ -128,6 +135,9 @@ export function AdminShell({ children }: AdminShellProps) {
       if (res.ok && data.success) {
         try {
           localStorage.setItem("niyat_admin_session", JSON.stringify(data.data.profile));
+          if (data.data.token) {
+            localStorage.setItem("niyat_admin_token", data.data.token);
+          }
         } catch (_) {}
         setServerAdmin(data.data.profile);
         window.location.reload();
@@ -189,6 +199,7 @@ export function AdminShell({ children }: AdminShellProps) {
     setServerAdmin(null);
     try {
       localStorage.removeItem("niyat_admin_session");
+      localStorage.removeItem("niyat_admin_token");
       localStorage.removeItem("niyat_dev_admin");
       document.cookie = "__session=; path=/; max-age=0;";
     } catch (_) {}

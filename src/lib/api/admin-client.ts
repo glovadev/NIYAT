@@ -24,6 +24,16 @@ export async function getAdminHeaders(initHeaders?: HeadersInit): Promise<Header
     // Non-blocking if Firebase client isn't ready
   }
 
+  // If no Firebase ID token, check localStorage for server admin JWT token
+  if (!headers.has("Authorization") && typeof window !== "undefined") {
+    try {
+      const savedToken = localStorage.getItem("niyat_admin_token");
+      if (savedToken) {
+        headers.set("Authorization", `Bearer ${savedToken}`);
+      }
+    } catch (_) {}
+  }
+
   // Local development bypass fallback
   if (process.env.NODE_ENV === "development" && !headers.has("Authorization")) {
     headers.set("x-dev-admin", "true");

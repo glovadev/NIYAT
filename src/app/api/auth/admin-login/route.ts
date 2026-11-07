@@ -99,6 +99,7 @@ export async function POST(req: NextRequest) {
         email: profile.email,
         role: profile.role,
       },
+      token,
       message: "Administrator session established",
     });
 

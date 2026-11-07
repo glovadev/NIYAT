@@ -14,6 +14,8 @@ import {
   Sparkles,
   AlertCircle,
   Tag,
+  Power,
+  Trash2,
 } from "lucide-react";
 
 interface CouponItem {
@@ -52,6 +54,7 @@ export default function AdminCouponsPage() {
     new Date(Date.now() + 90 * 86400000).toISOString().slice(0, 10)
   );
   const [formUsageLimit, setFormUsageLimit] = useState("500");
+  const [togglingId, setTogglingId] = useState<string | null>(null);
 
   const loadCoupons = async () => {
     setLoading(true);
@@ -67,6 +70,55 @@ export default function AdminCouponsPage() {
       setError(msg);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleToggleStatus = async (coupon: CouponItem) => {
+    const nextStatus = coupon.status === "ACTIVE" ? "INACTIVE" : "ACTIVE";
+    setTogglingId(coupon.id);
+    try {
+      const res = await adminFetch(`/api/admin/coupons/${coupon.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: nextStatus }),
+      });
+
+      if (!res.ok) {
+        throw new Error(res.error?.message || "Failed to update coupon status");
+      }
+
+      setCoupons((prev) =>
+        prev.map((c) => (c.id === coupon.id ? { ...c, status: nextStatus } : c))
+      );
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Error updating coupon status";
+      alert(msg);
+    } finally {
+      setTogglingId(null);
+    }
+  };
+
+  const handleDeleteCoupon = async (coupon: CouponItem) => {
+    if (!confirm(`Are you sure you want to permanently delete coupon "${coupon.code}"?`)) {
+      return;
+    }
+
+    setTogglingId(coupon.id);
+    try {
+      const res = await adminFetch(`/api/admin/coupons/${coupon.id}`, {
+        method: "DELETE",
+      });
+
+      if (!res.ok) {
+        throw new Error(res.error?.message || "Failed to delete coupon");
+      }
+
+      setCoupons((prev) => prev.filter((c) => c.id !== coupon.id));
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Error deleting coupon";
+      alert(msg);
+    } finally {
+      setTogglingId(null);
     }
   };
 
@@ -189,12 +241,14 @@ export default function AdminCouponsPage() {
                   <th className="py-3.5 px-6">Max Cap</th>
                   <th className="py-3.5 px-6">Redemptions</th>
                   <th className="py-3.5 px-6">Valid Period</th>
-                  <th className="py-3.5 px-6 text-right">Status</th>
+                  <th className="py-3.5 px-6 text-center">Status</th>
+                  <th className="py-3.5 px-6 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/60 text-xs">
                 {coupons.map((c) => {
                   const isExpired = new Date(c.expiresAt) < new Date();
+                  const isDeactivated = c.status === "INACTIVE";
                   return (
                     <tr key={c.id} className="hover:bg-slate-900/40 transition">
                       <td className="py-4 px-6 font-mono font-bold text-amber-400 text-sm">
@@ -246,16 +300,56 @@ export default function AdminCouponsPage() {
                         )}
                       </td>
 
-                      <td className="py-4 px-6 text-right">
+                      <td className="py-4 px-6 text-center">
                         <span
-                          className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider ${
-                            c.status === "ACTIVE" && !isExpired
+                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wider ${
+                            isExpired
+                              ? "bg-rose-500/10 text-rose-400 border border-rose-500/30"
+                              : !isDeactivated
                               ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30"
-                              : "bg-slate-800 text-slate-400 border border-slate-700"
+                              : "bg-amber-500/10 text-amber-400 border border-amber-500/30"
                           }`}
                         >
-                          {isExpired ? "EXPIRED" : c.status}
+                          <span
+                            className={`w-1.5 h-1.5 rounded-full ${
+                              isExpired
+                                ? "bg-rose-400"
+                                : !isDeactivated
+                                ? "bg-emerald-400 animate-pulse"
+                                : "bg-amber-400"
+                            }`}
+                          />
+                          {isExpired ? "EXPIRED" : isDeactivated ? "DEACTIVATED" : "ACTIVE"}
                         </span>
+                      </td>
+
+                      <td className="py-4 px-6 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            type="button"
+                            onClick={() => handleToggleStatus(c)}
+                            disabled={togglingId === c.id}
+                            title={c.status === "ACTIVE" ? "Deactivate Coupon" : "Activate Coupon"}
+                            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition border ${
+                              c.status === "ACTIVE"
+                                ? "bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border-amber-500/30"
+                                : "bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border-emerald-500/30"
+                            } disabled:opacity-50`}
+                          >
+                            <Power className={`w-3.5 h-3.5 ${togglingId === c.id ? "animate-spin" : ""}`} />
+                            {c.status === "ACTIVE" ? "Deactivate" : "Activate"}
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteCoupon(c)}
+                            disabled={togglingId === c.id}
+                            title="Delete Coupon"
+                            className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-rose-400 border border-slate-700 transition disabled:opacity-50"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );

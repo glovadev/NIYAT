@@ -206,7 +206,7 @@ Running NIYAT as a systemd service ensures it automatically starts on system boo
 
       # 1. Direct high-speed static delivery for uploaded product/banner images
       location /uploads/ {
-          alias /var/www/niyatuae.com/public/uploads/;
+          root /var/www/niyatuae.com/public;
           expires 30d;
           add_header Cache-Control "public, max-age=2592000, immutable";
           access_log off;
@@ -225,7 +225,7 @@ Running NIYAT as a systemd service ensures it automatically starts on system boo
       location /api/ {
           limit_req zone=niyat_api_limit burst=30 nodelay;
 
-          proxy_pass http://127.0.0.1:3007;
+          proxy_pass http://127.0.0.1:3008;
           proxy_http_version 1.1;
           proxy_set_header Upgrade $http_upgrade;
           proxy_set_header Connection 'upgrade';

@@ -24,7 +24,7 @@ server {
 
     # 1. Direct high-speed static delivery for uploaded images (bypasses Node.js)
     location /uploads/ {
-        alias /var/www/niyat-ecommerce/public/uploads/;
+        root /var/www/niyatuae.com/public;
         expires 30d;
         add_header Cache-Control "public, max-age=2592000, immutable";
         access_log off;
@@ -33,7 +33,7 @@ server {
 
     # 2. Next.js Static Assets (_next/static)
     location /_next/static/ {
-        alias /var/www/niyat-ecommerce/.next/static/;
+        alias /var/www/niyatuae.com/.next/static/;
         expires 365d;
         add_header Cache-Control "public, max-age=31536000, immutable";
         access_log off;

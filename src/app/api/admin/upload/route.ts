@@ -63,7 +63,9 @@ export async function POST(req: NextRequest) {
     const buffer = Buffer.from(bytes);
 
     const safeFolder = folder.replace(/[^a-zA-Z0-9_-]/g, "");
-    const uploadDir = path.join(process.cwd(), "public", "uploads", safeFolder);
+    const baseUploadDir =
+      process.env.UPLOAD_DIR || path.join(process.cwd(), "public", "uploads");
+    const uploadDir = path.join(baseUploadDir, safeFolder);
     await fs.mkdir(uploadDir, { recursive: true });
 
     const ext = path.extname(file.name) || ".jpg";
@@ -74,7 +76,7 @@ export async function POST(req: NextRequest) {
     const uniqueFileName = `${Date.now()}_${baseName}${ext}`;
     const filePath = path.join(uploadDir, uniqueFileName);
 
-    await fs.writeFile(filePath, buffer);
+    await fs.writeFile(filePath, buffer, { mode: 0o644 });
 
     const publicUrl = `/uploads/${safeFolder}/${uniqueFileName}`;
 
