@@ -73,7 +73,7 @@ export function Navbar() {
                     NIYAT
                   </span>
                   <span className="text-[7.5px] sm:text-[8.5px] tracking-[0.35em] uppercase text-[#A5833F] font-sans font-bold mt-1">
-                    DUBAI • ROYAL APOTHECARY
+                    UAE • ROYAL APOTHECARY
                   </span>
                 </div>
               </Link>
