@@ -11,13 +11,14 @@ import { AuthModal } from "@/components/auth/AuthModal";
 import {
   ShoppingBag,
   User,
-  Search,
   Heart,
   Menu,
   X,
   ChevronRight,
   PackageCheck,
 } from "lucide-react";
+
+import { SearchAutocomplete } from "./SearchAutocomplete";
 
 export function Navbar() {
   const router = useRouter();
@@ -27,18 +28,10 @@ export function Navbar() {
   const { user, profile } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
 
   const isHomeActive = pathname === "/";
   const isShopActive = pathname.startsWith("/shop") || pathname.startsWith("/categories");
   const isOrderActive = pathname.startsWith("/orders") || pathname.startsWith("/account/orders");
-
-  const handleSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      router.push(`/shop?q=${encodeURIComponent(searchQuery.trim())}`);
-    }
-  };
 
   const navLinks = [
     { label: "Home", href: "/" },
@@ -119,18 +112,9 @@ export function Navbar() {
               </Link>
             </nav>
 
-            {/* Center: Search Bar with Gold Trim */}
+            {/* Center: Search Bar with Live Product Autocomplete & Suggestions */}
             <div className="flex-1 max-w-xl mx-2 sm:mx-6">
-              <form onSubmit={handleSearchSubmit} className="relative w-full">
-                <Search className="absolute left-3.5 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#D4AF37]" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search pure saffron, 24K gold creams, serums..."
-                  className="w-full pl-9 sm:pl-11 pr-3 sm:pr-4 py-2 sm:py-2.5 bg-[#FAF6EE]/80 hover:bg-[#FAF6EE] focus:bg-white border border-[#D4AF37]/30 focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37]/20 rounded-xl text-xs sm:text-sm text-[#172723] placeholder-[#172723]/50 focus:outline-none transition-all shadow-inner/10"
-                />
-              </form>
+              <SearchAutocomplete />
             </div>
 
             {/* Right: Account, Wishlist, Cart with Labels */}
