@@ -65,6 +65,13 @@
   .border-ivory {
     border-color: #EAE5DC;
   }
+
+  .font-price {
+    font-family: var(--font-jakarta), "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+    font-feature-settings: "tnum" on, "lnum" on;
+    font-variant-numeric: tabular-nums lining-nums;
+    letter-spacing: -0.015em;
+  }
 }
 
 @keyframes goldShimmer {

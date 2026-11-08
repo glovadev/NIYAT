@@ -82,7 +82,7 @@ export function CartDrawer() {
               </p>
             ) : amountNeeded > 0 ? (
               <p className="text-niyat-charcoal">
-                Add <span className="font-bold text-niyat-emerald">{formatPaise(amountNeeded)}</span> more to unlock{" "}
+                Add <span className="font-bold font-price text-niyat-emerald">{formatPaise(amountNeeded)}</span> more to unlock{" "}
                 <span className="font-semibold text-niyat-gold-dark">Free Complimentary Shipping</span>
               </p>
             ) : (
@@ -173,11 +173,11 @@ export function CartDrawer() {
                       </div>
 
                       <div className="text-right">
-                        <span className="text-sm font-semibold text-niyat-emerald">
+                        <span className="text-sm font-semibold font-price text-niyat-emerald">
                           {formatPaise(item.effectivePricePaise * item.quantity)}
                         </span>
                         {item.salePricePaise && item.salePricePaise < item.regularPricePaise && (
-                          <span className="block text-xs text-stone-400 line-through">
+                          <span className="block text-xs font-price text-stone-400 line-through">
                             {formatPaise(item.regularPricePaise * item.quantity)}
                           </span>
                         )}
@@ -194,7 +194,7 @@ export function CartDrawer() {
             <div className="px-6 py-5 border-t border-niyat-ivory-border bg-niyat-ivory">
               <div className="flex justify-between text-sm mb-1 text-niyat-charcoal-muted">
                 <span>Subtotal</span>
-                <span className="font-medium text-niyat-charcoal">{formatPaise(subtotalPaise)}</span>
+                <span className="font-medium font-price text-niyat-charcoal">{formatPaise(subtotalPaise)}</span>
               </div>
               <div className="flex justify-between text-xs text-niyat-charcoal-muted mb-4">
                 <span>Estimated Shipping</span>

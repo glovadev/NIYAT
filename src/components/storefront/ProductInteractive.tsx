@@ -212,11 +212,11 @@ export function ProductInteractive({ product }: ProductInteractiveProps) {
         {/* Price & Size display */}
         <div className="space-y-2 pt-2 border-t border-niyat-ivory-border/70">
           <div className="flex items-baseline gap-3">
-            <span className="font-serif text-2xl sm:text-3xl font-bold text-niyat-emerald">
+            <span className="font-price text-2xl sm:text-3xl font-extrabold text-niyat-emerald">
               {formatPaise(effectivePrice)}
             </span>
             {hasDiscount && (
-              <span className="text-base text-niyat-muted line-through font-normal">
+              <span className="font-price text-base text-niyat-muted line-through font-normal">
                 {formatPaise(product.regularPricePaise)}
               </span>
             )}

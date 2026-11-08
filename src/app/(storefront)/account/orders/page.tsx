@@ -202,7 +202,7 @@ export default function CustomerOrdersPage() {
                         <span className="text-[11px] text-niyat-muted block uppercase tracking-wider">
                           Grand Total
                         </span>
-                        <span className="font-serif text-lg font-bold text-niyat-emerald">
+                        <span className="font-price text-lg font-extrabold text-niyat-emerald">
                           {formatPaise(order.totalPaise)}
                         </span>
                       </div>

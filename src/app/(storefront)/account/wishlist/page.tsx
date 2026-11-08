@@ -171,11 +171,11 @@ export default function CustomerWishlistPage() {
                         {item.name}
                       </Link>
                       <div className="flex items-baseline gap-2 pt-0.5">
-                        <span className="font-serif font-bold text-base text-niyat-emerald">
+                        <span className="font-price font-bold text-base text-niyat-emerald">
                           {formatPaise(effectivePrice)}
                         </span>
                         {item.salePricePaise && (
-                          <span className="text-xs text-niyat-muted line-through">
+                          <span className="text-xs font-price text-niyat-muted line-through">
                             {formatPaise(item.regularPricePaise)}
                           </span>
                         )}

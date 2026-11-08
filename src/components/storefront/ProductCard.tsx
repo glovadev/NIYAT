@@ -209,12 +209,12 @@ export function ProductCard(props: ProductCardComponentProps) {
 
         {/* Price & Discount Pill */}
         <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 pt-0.5 sm:pt-1 pb-2 sm:pb-3">
-          <span className="text-sm sm:text-lg font-bold font-serif text-[#0A261D]">
+          <span className="text-sm sm:text-lg font-bold font-price text-[#0A261D]">
             {formatPaise(displayCurrentPrice)}
           </span>
 
           {displayOriginalPrice && (
-            <span className="text-[10px] sm:text-xs text-stone-400 line-through">
+            <span className="text-[10px] sm:text-xs font-price text-stone-400 line-through">
               {formatPaise(displayOriginalPrice)}
             </span>
           )}

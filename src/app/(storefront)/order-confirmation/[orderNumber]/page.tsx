@@ -114,7 +114,7 @@ export default async function OrderConfirmationPage({
                     </div>
                   </div>
 
-                  <span className="font-serif font-bold text-niyat-charcoal text-sm">
+                  <span className="font-price font-bold text-niyat-charcoal text-sm">
                     {formatPaise(item.lineTotalPaise)}
                   </span>
                 </div>
@@ -171,7 +171,7 @@ export default async function OrderConfirmationPage({
                 </div>
                 <div className="flex justify-between pt-2 border-t border-neutral-200 font-bold text-sm text-niyat-charcoal">
                   <span>Total Paid / Due:</span>
-                  <span className="font-serif text-base text-niyat-emerald">
+                  <span className="font-price text-base text-niyat-emerald font-extrabold">
                     {formatPaise(order.totalPaise)}
                   </span>
                 </div>

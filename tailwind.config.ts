@@ -54,6 +54,7 @@ const config: Config = {
       fontFamily: {
         serif: ["var(--font-cormorant)", "Cormorant Garamond", "Georgia", "serif"],
         sans: ["var(--font-jakarta)", "Plus Jakarta Sans", "system-ui", "sans-serif"],
+        price: ["var(--font-jakarta)", "Plus Jakarta Sans", "system-ui", "-apple-system", "sans-serif"],
       },
       boxShadow: {
         luxury: "0 10px 30px -10px rgba(15, 56, 44, 0.08)",

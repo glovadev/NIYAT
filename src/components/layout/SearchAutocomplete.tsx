@@ -257,11 +257,11 @@ export function SearchAutocomplete() {
 
                       {/* Price */}
                       <div className="text-right shrink-0">
-                        <div className="text-xs font-bold text-[#153D32]">
+                        <div className="text-xs font-bold font-price text-[#153D32]">
                           {formatPaise(effectivePrice)}
                         </div>
                         {hasDiscount && (
-                          <div className="text-[10px] text-stone-400 line-through">
+                          <div className="text-[10px] font-price text-stone-400 line-through">
                             {formatPaise(p.regularPricePaise)}
                           </div>
                         )}

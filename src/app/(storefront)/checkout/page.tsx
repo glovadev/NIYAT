@@ -811,11 +811,11 @@ export default function CheckoutPage() {
                         </p>
                       </div>
                       <div className="text-right">
-                        <span className="font-serif font-bold text-niyat-charcoal">
+                        <span className="font-price font-bold text-niyat-charcoal">
                           {formatPaise(effectiveUnitPrice * item.quantity)}
                         </span>
                         {hasDiscount && (
-                          <span className="block text-[10px] text-stone-400 line-through">
+                          <span className="block text-[10px] font-price text-stone-400 line-through">
                             {formatPaise(item.regularPricePaise * item.quantity)}
                           </span>
                         )}
@@ -874,7 +874,7 @@ export default function CheckoutPage() {
               <div className="space-y-2.5 pt-2 border-t border-niyat-ivory-border text-xs text-niyat-charcoal/80">
                 <div className="flex justify-between">
                   <span>Subtotal</span>
-                  <span className="font-medium text-niyat-charcoal">
+                  <span className="font-price font-semibold text-niyat-charcoal">
                     {formatPaise(subtotalPaise)}
                   </span>
                 </div>
@@ -882,7 +882,7 @@ export default function CheckoutPage() {
                 {couponDiscount > 0 && (
                   <div className="flex justify-between text-emerald-700 font-medium">
                     <span>Coupon Discount</span>
-                    <span>- {formatPaise(couponDiscount)}</span>
+                    <span className="font-price font-semibold">- {formatPaise(couponDiscount)}</span>
                   </div>
                 )}
 
@@ -895,7 +895,7 @@ export default function CheckoutPage() {
                         : "Complimentary Free"}
                     </span>
                   ) : (
-                    <span className="font-medium text-niyat-charcoal">
+                    <span className="font-price font-semibold text-niyat-charcoal">
                       {formatPaise(shippingFeePaise)}
                     </span>
                   )}
@@ -903,12 +903,12 @@ export default function CheckoutPage() {
 
                 <div className="flex justify-between text-niyat-muted text-[11px]">
                   <span>Itemized GST (18% inclusive)</span>
-                  <span>{formatPaise(taxPaise)}</span>
+                  <span className="font-price">{formatPaise(taxPaise)}</span>
                 </div>
 
                 <div className="flex justify-between pt-3 border-t border-niyat-ivory-border text-base text-niyat-charcoal font-bold">
                   <span className="font-serif">Grand Total</span>
-                  <span className="font-serif text-2xl text-niyat-emerald font-bold">
+                  <span className="font-price text-2xl text-niyat-emerald font-extrabold">
                     {formatPaise(grandTotalPaise)}
                   </span>
                 </div>
