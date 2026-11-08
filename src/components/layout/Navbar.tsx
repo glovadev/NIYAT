@@ -42,7 +42,7 @@ export function Navbar() {
 
   const navLinks = [
     { label: "Home", href: "/" },
-    { label: "Shop All", href: "/shop" },
+    { label: "The Collection", href: "/shop" },
     { label: "Face Wash", href: "/categories/facial-cleanser" },
     { label: "Moisturizers", href: "/categories/face-cream" },
     { label: "Serums", href: "/categories/facial-serum" },
@@ -93,10 +93,10 @@ export function Navbar() {
               </Link>
               <Link
                 href="/shop"
-                className={`text-xs font-semibold tracking-wider uppercase transition-colors py-1 ${
+                className={`text-xs font-bold tracking-wider uppercase transition-colors py-1 ${
                   isShopActive
-                    ? "text-[#153D32] border-b-2 border-[#D4AF37]"
-                    : "text-[#172723]/75 hover:text-[#153D32]"
+                    ? "text-[#B38728] border-b-2 border-[#D4AF37]"
+                    : "text-[#B38728] hover:text-[#8F6B20]"
                 }`}
               >
                 The Collection
@@ -244,17 +244,24 @@ export function Navbar() {
                 </div>
 
                 <div className="py-6 space-y-4">
-                  {navLinks.map((link) => (
-                    <Link
-                      key={link.href}
-                      href={link.href}
-                      onClick={() => setIsMobileMenuOpen(false)}
-                      className="flex items-center justify-between text-sm uppercase tracking-wider font-medium text-[#172723] hover:text-[#153D32] py-2 border-b border-[#EAE5DC]/60"
-                    >
-                      <span>{link.label}</span>
-                      <ChevronRight className="w-4 h-4 text-stone-400" />
-                    </Link>
-                  ))}
+                  {navLinks.map((link) => {
+                    const isCollection = link.href === "/shop";
+                    return (
+                      <Link
+                        key={link.href}
+                        href={link.href}
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className={`flex items-center justify-between text-sm uppercase tracking-wider py-2 border-b border-[#EAE5DC]/60 ${
+                          isCollection
+                            ? "text-[#B38728] font-bold"
+                            : "font-medium text-[#172723] hover:text-[#153D32]"
+                        }`}
+                      >
+                        <span>{link.label}</span>
+                        <ChevronRight className={`w-4 h-4 ${isCollection ? "text-[#B38728]" : "text-stone-400"}`} />
+                      </Link>
+                    );
+                  })}
 
                   <Link
                     href="/orders/track"
