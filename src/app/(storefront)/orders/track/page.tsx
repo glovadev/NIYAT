@@ -12,6 +12,11 @@ import {
   ExternalLink,
   ChevronRight,
   ShieldCheck,
+  Calendar,
+  Copy,
+  Check,
+  Activity,
+  MapPin,
 } from "lucide-react";
 
 interface TrackingResult {
@@ -32,10 +37,21 @@ interface TrackingResult {
   };
   shipment?: {
     carrier?: string;
+    courierName?: string;
     trackingNumber?: string;
+    awbCode?: string;
     trackingUrl?: string;
+    currentShippingStatus?: string;
+    estimatedDeliveryDate?: string;
     shippedAt?: string;
     deliveredAt?: string;
+    activities?: Array<{
+      date: string;
+      status: string;
+      activity: string;
+      location?: string;
+      srStatusCode?: number;
+    }>;
   } | null;
   timeline?: Array<{
     status: string;
@@ -57,6 +73,13 @@ export default function OrderTrackingPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<TrackingResult | null>(null);
+  const [copiedAwb, setCopiedAwb] = useState(false);
+
+  const handleCopyAwb = (awb: string) => {
+    navigator.clipboard.writeText(awb);
+    setCopiedAwb(true);
+    setTimeout(() => setCopiedAwb(false), 2000);
+  };
 
   const handleTrackSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -272,41 +295,144 @@ export default function OrderTrackingPage() {
               </div>
             </div>
 
-            {/* Shipment Courier Details (if shipped) */}
+            {/* Shipment Courier Details & Real-Time Tracking */}
             {result.shipment && (
-              <div className="p-6 rounded-2xl bg-niyat-ivory border border-niyat-ivory-border space-y-3">
-                <div className="flex items-center gap-2 text-niyat-emerald">
-                  <Truck className="w-4 h-4 text-niyat-gold" />
-                  <h4 className="text-xs font-semibold uppercase tracking-wider text-niyat-charcoal">
-                    Carrier &amp; Dispatch Information
-                  </h4>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
-                  <div>
-                    <span className="text-niyat-muted block">Courier Partner:</span>
-                    <span className="font-medium text-niyat-charcoal">
-                      {result.shipment.carrier || "Standard Express"}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-niyat-muted block">AWB / Tracking Number:</span>
-                    <span className="font-mono font-medium text-niyat-charcoal">
-                      {result.shipment.trackingNumber || "Assigned at Hub"}
-                    </span>
-                  </div>
-                  <div>
-                    {result.shipment.trackingUrl && (
-                      <a
-                        href={result.shipment.trackingUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-niyat-emerald text-white text-xs font-medium hover:bg-niyat-emerald-dark transition-all mt-1"
-                      >
-                        Live Tracking <ExternalLink className="w-3 h-3" />
-                      </a>
+              <div className="space-y-4">
+                {/* ETD Banner if available */}
+                {result.shipment.estimatedDeliveryDate && (
+                  <div className="p-4 rounded-2xl bg-niyat-gold/10 border border-niyat-gold/30 flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-niyat-gold/20 flex items-center justify-center text-niyat-gold">
+                        <Calendar className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <span className="text-[11px] uppercase tracking-wider text-niyat-gold font-semibold block">
+                          Estimated Delivery Date
+                        </span>
+                        <span className="text-sm font-semibold text-niyat-charcoal">
+                          {new Date(result.shipment.estimatedDeliveryDate).toLocaleDateString("en-IN", {
+                            weekday: "short",
+                            day: "numeric",
+                            month: "short",
+                            year: "numeric",
+                          })}
+                        </span>
+                      </div>
+                    </div>
+                    {result.shipment.currentShippingStatus && (
+                      <span className="px-3 py-1 rounded-full text-xs font-semibold bg-white text-niyat-charcoal border border-niyat-ivory-border shadow-xs">
+                        {result.shipment.currentShippingStatus}
+                      </span>
                     )}
                   </div>
+                )}
+
+                {/* Dispatch & Carrier Information */}
+                <div className="p-6 rounded-2xl bg-niyat-ivory border border-niyat-ivory-border space-y-4">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 text-niyat-emerald">
+                      <Truck className="w-4 h-4 text-niyat-gold" />
+                      <h4 className="text-xs font-semibold uppercase tracking-wider text-niyat-charcoal">
+                        Carrier &amp; Dispatch Information
+                      </h4>
+                    </div>
+                    {result.shipment.currentShippingStatus && !result.shipment.estimatedDeliveryDate && (
+                      <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                        {result.shipment.currentShippingStatus}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+                    <div>
+                      <span className="text-niyat-muted block mb-0.5">Courier Partner:</span>
+                      <span className="font-medium text-niyat-charcoal text-sm">
+                        {result.shipment.courierName || result.shipment.carrier || "Standard Express"}
+                      </span>
+                    </div>
+
+                    <div>
+                      <span className="text-niyat-muted block mb-0.5">AWB / Tracking Number:</span>
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono font-semibold text-niyat-charcoal text-sm">
+                          {result.shipment.awbCode || result.shipment.trackingNumber || "Assigned at Hub"}
+                        </span>
+                        {(result.shipment.awbCode || result.shipment.trackingNumber) && (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              handleCopyAwb(result.shipment?.awbCode || result.shipment?.trackingNumber || "")
+                            }
+                            className="p-1 rounded hover:bg-neutral-200 text-neutral-500 transition-colors"
+                            title="Copy AWB Number"
+                          >
+                            {copiedAwb ? (
+                              <Check className="w-3.5 h-3.5 text-emerald-600" />
+                            ) : (
+                              <Copy className="w-3.5 h-3.5" />
+                            )}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    <div>
+                      {result.shipment.trackingUrl && /^https?:\/\//i.test(result.shipment.trackingUrl) && (
+                        <a
+                          href={result.shipment.trackingUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-niyat-emerald text-white text-xs font-medium hover:bg-niyat-emerald-dark transition-all shadow-xs"
+                        >
+                          Live Carrier Tracking <ExternalLink className="w-3 h-3" />
+                        </a>
+                      )}
+                    </div>
+                  </div>
                 </div>
+
+                {/* Real-Time Checkpoint Scans Timeline */}
+                {result.shipment.activities && result.shipment.activities.length > 0 && (
+                  <div className="p-6 rounded-2xl bg-white border border-niyat-ivory-border space-y-4">
+                    <div className="flex items-center gap-2 text-niyat-charcoal">
+                      <Activity className="w-4 h-4 text-niyat-emerald" />
+                      <h4 className="text-xs font-semibold uppercase tracking-wider text-niyat-charcoal">
+                        Detailed Transit History ({result.shipment.activities.length} Checkpoints)
+                      </h4>
+                    </div>
+
+                    <div className="relative pl-6 space-y-4 before:absolute before:left-2.5 before:top-2 before:bottom-2 before:w-0.5 before:bg-niyat-ivory-border">
+                      {result.shipment.activities.map((act, idx) => (
+                        <div key={idx} className="relative group text-xs">
+                          {/* Dot indicator */}
+                          <div
+                            className={`absolute -left-6 top-1 w-3 h-3 rounded-full border-2 ${
+                              idx === 0
+                                ? "bg-niyat-emerald border-emerald-300 ring-2 ring-emerald-100"
+                                : "bg-neutral-300 border-white"
+                            }`}
+                          />
+                          <div className="bg-neutral-50 rounded-xl p-3 border border-neutral-200">
+                            <div className="flex items-center justify-between gap-2 mb-1">
+                              <span className="font-semibold text-niyat-charcoal">
+                                {act.activity || act.status}
+                              </span>
+                              <span className="text-[11px] text-niyat-muted font-mono">
+                                {act.date}
+                              </span>
+                            </div>
+                            {act.location && (
+                              <p className="text-[11px] text-niyat-muted flex items-center gap-1">
+                                <MapPin className="w-3 h-3 text-niyat-gold" />
+                                {act.location}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 

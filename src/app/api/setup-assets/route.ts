@@ -14,7 +14,7 @@ export async function GET() {
     const catDir = path.join(imagesDir, "categories");
     fs.mkdirSync(catDir, { recursive: true });
 
-    const basePath = "C:\\Users\\mainh\\.gemini\\antigravity-ide\\brain\\ddc43de3-c510-471b-b9f5-01825a8d6724";
+    const basePath = process.env.SETUP_ASSETS_BASE_PATH || "";
 
     const filesToCopy: [string, string][] = [
       ["niyat_hero_woman_1792823381580.jpg", path.join(imagesDir, "hero-woman.jpg")],
@@ -30,11 +30,13 @@ export async function GET() {
     ];
 
     const copied: string[] = [];
-    for (const [srcName, destPath] of filesToCopy) {
-      const srcPath = path.join(basePath, srcName);
-      if (fs.existsSync(srcPath)) {
-        fs.copyFileSync(srcPath, destPath);
-        copied.push(path.basename(destPath));
+    if (basePath && fs.existsSync(basePath)) {
+      for (const [srcName, destPath] of filesToCopy) {
+        const srcPath = path.join(basePath, srcName);
+        if (fs.existsSync(srcPath)) {
+          fs.copyFileSync(srcPath, destPath);
+          copied.push(path.basename(destPath));
+        }
       }
     }
 

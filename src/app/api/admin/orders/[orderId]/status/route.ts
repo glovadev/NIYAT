@@ -82,20 +82,38 @@ export async function PATCH(
 
     // 1. Update Fulfilment Status
     if (parsed.data.status) {
-      const previousStatus = order.fulfilmentStatus;
       const nextStatus = parsed.data.status;
+      const isAdvancingToTransit = ["SHIPPED", "OUT_FOR_DELIVERY", "DELIVERED"].includes(nextStatus);
+
+      // Safety Guard: Manual controls cannot bypass emergency review or shipment state restrictions
+      if (isAdvancingToTransit) {
+        if (
+          order.shipment?.requiresReview ||
+          order.shipment?.shipmentState === "REASSIGNMENT_BLOCKED" ||
+          order.shipment?.shipmentState === "RECONCILIATION_REQUIRED"
+        ) {
+          return apiError(
+            "TRANSITION_BLOCKED",
+            `Manual transition to ${nextStatus} blocked: Order has an unresolved shipment review or lock (${order.shipment?.shipmentState || "REVIEW_REQUIRED"}). Reconcile or resolve emergency override first.`,
+            400
+          );
+        }
+      }
+
+      const previousStatus = order.fulfilmentStatus;
       order.fulfilmentStatus = nextStatus;
 
-      // If shipping info provided
-      if (parsed.data.carrier || parsed.data.trackingNumber || parsed.data.trackingUrl) {
-        order.shipment = {
-          carrier: parsed.data.carrier || order.shipment?.carrier,
-          trackingNumber: parsed.data.trackingNumber || order.shipment?.trackingNumber,
-          trackingUrl: parsed.data.trackingUrl || order.shipment?.trackingUrl,
-          shippedAt: nextStatus === "SHIPPED" ? new Date() : order.shipment?.shippedAt,
-          deliveredAt: nextStatus === "DELIVERED" ? new Date() : order.shipment?.deliveredAt,
-        };
+      // Preserve existing shipment object structure (parcel, shipmentState, awbCode, etc.)
+      if (!order.shipment) {
+        order.shipment = {} as any;
       }
+      const shipment = order.shipment!;
+
+      if (parsed.data.carrier) shipment.carrier = parsed.data.carrier;
+      if (parsed.data.trackingNumber) shipment.trackingNumber = parsed.data.trackingNumber;
+      if (parsed.data.trackingUrl !== undefined) shipment.trackingUrl = parsed.data.trackingUrl || undefined;
+      if (nextStatus === "SHIPPED" && !shipment.shippedAt) shipment.shippedAt = new Date();
+      if (nextStatus === "DELIVERED" && !shipment.deliveredAt) shipment.deliveredAt = new Date();
 
       order.statusHistory.push({
         type: "FULFILMENT",

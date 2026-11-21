@@ -68,14 +68,13 @@ export default function AdminReviewsPage() {
   ) => {
     setActionInProgress(reviewId);
     try {
-      const res = await fetch(`/api/admin/reviews/${reviewId}`, {
+      const res = await adminFetch(`/api/admin/reviews/${reviewId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status }),
       });
-      const json = await res.json();
-      if (!res.ok || !json.success) {
-        throw new Error(json.error?.message || "Moderation action failed");
+      if (!res.ok) {
+        throw new Error(res.error?.message || "Moderation action failed");
       }
       loadReviews();
     } catch (err: unknown) {
@@ -90,12 +89,11 @@ export default function AdminReviewsPage() {
       return;
     setActionInProgress(reviewId);
     try {
-      const res = await fetch(`/api/admin/reviews/${reviewId}`, {
+      const res = await adminFetch(`/api/admin/reviews/${reviewId}`, {
         method: "DELETE",
       });
-      const json = await res.json();
-      if (!res.ok || !json.success) {
-        throw new Error(json.error?.message || "Deletion failed");
+      if (!res.ok) {
+        throw new Error(res.error?.message || "Deletion failed");
       }
       loadReviews();
     } catch (err: unknown) {

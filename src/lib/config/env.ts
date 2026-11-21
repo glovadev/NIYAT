@@ -12,6 +12,16 @@ const serverEnvSchema = z.object({
   RAZORPAY_KEY_ID: z.string().optional(),
   RAZORPAY_KEY_SECRET: z.string().optional(),
   RAZORPAY_WEBHOOK_SECRET: z.string().optional(),
+  // Shiprocket logistics configuration (Optional for normal application startup)
+  SHIPROCKET_API_EMAIL: z.string().email().optional(),
+  SHIPROCKET_API_PASSWORD: z.string().min(6).optional(),
+  SHIPROCKET_DEFAULT_PICKUP_LOCATION: z.string().optional(),
+  SHIPROCKET_WAREHOUSE_PIN: z
+    .string()
+    .regex(/^\d{6}$/, "Must be a 6-digit Indian PIN code")
+    .optional(),
+  SHIPROCKET_WEBHOOK_SECRET: z.string().min(8).optional(),
+  LOGISTICS_CRON_SECRET: z.string().min(8).optional(),
 });
 
 export type ServerEnv = z.infer<typeof serverEnvSchema>;

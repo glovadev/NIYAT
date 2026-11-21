@@ -11,6 +11,7 @@ import {
   Image as ImageIcon,
 } from "lucide-react";
 import { auth } from "@/lib/firebase/client";
+import { getAdminHeaders } from "@/lib/api/admin-client";
 
 const MAX_IMAGE_SIZE_BYTES = 1 * 1024 * 1024; // 1 MB limit
 
@@ -60,13 +61,8 @@ export function ImageUploader({
       setUploading(true);
       setProgress(10);
 
-      // Get Firebase ID token if user is signed in with Firebase, or fallback to dev session
-      let token = "dev-admin-session";
-      try {
-        if (auth.currentUser) {
-          token = await auth.currentUser.getIdToken();
-        }
-      } catch (_) {}
+      // Get authentication headers using universal getAdminHeaders()
+      const adminHeaders = await getAdminHeaders();
 
       // Prepare form data
       const formData = new FormData();
@@ -78,8 +74,10 @@ export function ImageUploader({
         const xhr = new XMLHttpRequest();
         xhr.open("POST", "/api/admin/upload");
         xhr.withCredentials = true;
-        xhr.setRequestHeader("x-dev-admin", "true");
-        xhr.setRequestHeader("Authorization", `Bearer ${token}`);
+
+        adminHeaders.forEach((value, key) => {
+          xhr.setRequestHeader(key, value);
+        });
 
         xhr.upload.onprogress = (event) => {
           if (event.lengthComputable) {

@@ -26,6 +26,147 @@ export type FulfilmentStatus =
   | "RETURN_REQUESTED"
   | "RETURNED";
 
+export type ShipmentState =
+  | "IDLE"
+  | "CREATING_ORDER"
+  | "ORDER_CREATED"
+  | "ASSIGNING_AWB"
+  | "AWB_ASSIGNED"
+  | "GENERATING_LABEL"
+  | "LABEL_GENERATED"
+  | "SCHEDULING_PICKUP"
+  | "PICKUP_SCHEDULED"
+  | "MANIFEST_GENERATING"
+  | "MANIFEST_GENERATED"
+  | "LOGISTICS_READY"
+  | "FAILED"
+  | "RECONCILIATION_REQUIRED"
+  | "REASSIGNMENT_BLOCKED";
+
+export interface IOrderParcelSpecs {
+  weightGrams: number;
+  lengthCm: number;
+  breadthCm: number;
+  heightCm: number;
+}
+
+export interface IOrderTrackingActivity {
+  scanKey: string;
+  date: string;
+  status: string;
+  activity: string;
+  location: string;
+  srStatusCode?: number;
+}
+
+export interface ICarrierCancellationEvent {
+  incidentKey: string;
+  isBestEffort: boolean;
+  originatingWebhookEventId?: string;
+  receivedAt: Date;
+  rawActivity: string;
+  sourceStatusId: 8;
+  shipmentStateAtCancellation: ShipmentState;
+  awbCode: string;
+  resolved: boolean;
+  resolution?: {
+    action: "REASSIGN_COURIER" | "CANCEL_CUSTOMER_ORDER" | "DISMISS";
+    resolvedAt: Date;
+    resolvedByAdminId: string;
+    resolvedByAdminEmail: string;
+    reason: string;
+  };
+}
+
+export interface IAwbCancellationRecord {
+  cancellationId?: string;
+  awbCode: string;
+  requestedAt: Date;
+  outcome: "CONFIRMED" | "REJECTED_BY_CARRIER" | "PENDING_VERIFICATION" | "ADMIN_FORCE_OVERRIDE";
+  carrierResponse?: string;
+  resolvedAt?: Date;
+  actingAdminId?: string;
+  actingAdminEmail?: string;
+  approvingAdminId?: string;
+  approvingAdminEmail?: string;
+  evidenceReference?: string;
+  overrideReason?: string;
+}
+
+export interface IEmergencyOverrideRequest {
+  requesterAdminId: string;
+  requesterAdminEmail: string;
+  requestedAt: Date;
+  reason: string;
+  evidenceReference: string;
+  targetAwbCode?: string;
+  targetCancellationId?: string;
+  reviewIncidentId?: string;
+  shipmentStateAtRequest?: ShipmentState;
+  status: "PENDING_APPROVAL" | "APPROVED" | "REJECTED";
+  reviewedAt?: Date;
+  reviewerAdminId?: string;
+  reviewerAdminEmail?: string;
+  reviewNote?: string;
+}
+
+export interface IOrderShipment {
+  carrier?: string;
+  trackingNumber?: string;
+  trackingUrl?: string;
+  shippedAt?: Date;
+  deliveredAt?: Date;
+
+  shiprocketOrderId?: number;
+  shiprocketShipmentId?: number;
+  courierCompanyId?: number;
+  courierName?: string;
+  awbCode?: string;
+
+  labelUrl?: string;
+  manifestUrl?: string;
+
+  pickupLocation?: string;
+  pickupScheduledDate?: Date;
+  pickupTokenNumber?: string;
+
+  currentShippingStatus?: string;
+  currentStatusCode?: number;
+  estimatedDeliveryDate?: Date;
+  trackingActivities?: IOrderTrackingActivity[];
+
+  parcel?: IOrderParcelSpecs;
+
+  shipmentState?: ShipmentState;
+  operationId?: string;
+  lockTimestamp?: Date;
+  lastFailedStep?:
+    | "CREATE_ORDER"
+    | "ASSIGN_AWB"
+    | "GENERATE_LABEL"
+    | "SCHEDULE_PICKUP"
+    | "GENERATE_MANIFEST";
+  lastError?: string;
+
+  carrierCancellations?: ICarrierCancellationEvent[];
+  awbCancellations?: IAwbCancellationRecord[];
+  overrideRequest?: IEmergencyOverrideRequest;
+
+  requiresReview?: boolean;
+  reviewReason?: string;
+  reviewIncidentId?: string;
+  reviewCategory?:
+    | "REASSIGNMENT_BLOCKED"
+    | "TIMEOUT_RECONCILIATION"
+    | "DAMAGED_PACKAGE"
+    | "CARRIER_EXCEPTION"
+    | "CUSTOMER_DISPUTE"
+    | "INCOMPLETE_WEBHOOK"
+    | "CARRIER_CANCELLATION"
+    | "OTHER";
+  reviewAcknowledgedAt?: Date;
+}
+
 export interface IOrderItemSnapshot {
   productId: mongoose.Types.ObjectId;
   productName: string;
@@ -85,13 +226,13 @@ export interface IOrder extends Document {
   fulfilmentStatus: FulfilmentStatus;
   stockAppliedAt?: Date;
   cancellationReason?: string;
-  shipment?: {
-    carrier?: string;
-    trackingNumber?: string;
-    trackingUrl?: string;
-    shippedAt?: Date;
-    deliveredAt?: Date;
-  };
+  shipment?: IOrderShipment;
+  stockRestorationState?: "NOT_APPLIED" | "PENDING" | "PARTIALLY_RESTORED" | "COMPLETED";
+  stockRestorationWorkerId?: string;
+  stockRestorationLeaseExpiresAt?: Date;
+  stockRestorationStartedAt?: Date;
+  stockRestoredAt?: Date;
+  lastRestorationError?: string;
   isDistributorOrder?: boolean;
   distributorInfo?: {
     companyName?: string;
@@ -145,6 +286,181 @@ const OrderStatusHistorySchema = new Schema<IOrderStatusHistory>(
     actorId: { type: String },
     reason: { type: String },
     at: { type: Date, default: Date.now },
+  },
+  { _id: false }
+);
+
+const OrderParcelSpecsSchema = new Schema<IOrderParcelSpecs>(
+  {
+    weightGrams: {
+      type: Number,
+      required: true,
+      min: [10, "Weight must be at least 10 grams"],
+      max: [50000, "Weight cannot exceed 50,000 grams (50 kg)"],
+      validate: {
+        validator: Number.isInteger,
+        message: "Weight must be an integer in grams",
+      },
+    },
+    lengthCm: { type: Number, required: true, min: [0.5, "Length must be at least 0.5 cm"], max: 200 },
+    breadthCm: { type: Number, required: true, min: [0.5, "Breadth must be at least 0.5 cm"], max: 200 },
+    heightCm: { type: Number, required: true, min: [0.5, "Height must be at least 0.5 cm"], max: 200 },
+  },
+  { _id: false }
+);
+
+const OrderTrackingActivitySchema = new Schema<IOrderTrackingActivity>(
+  {
+    scanKey: { type: String, required: true },
+    date: { type: String, required: true },
+    status: { type: String, required: true },
+    activity: { type: String, required: true },
+    location: { type: String, default: "" },
+    srStatusCode: { type: Number },
+  },
+  { _id: false }
+);
+
+const CarrierCancellationEventSchema = new Schema<ICarrierCancellationEvent>(
+  {
+    incidentKey: { type: String, required: true },
+    isBestEffort: { type: Boolean, default: false },
+    originatingWebhookEventId: { type: String },
+    receivedAt: { type: Date, default: Date.now },
+    rawActivity: { type: String, default: "" },
+    sourceStatusId: { type: Number, default: 8 },
+    shipmentStateAtCancellation: { type: String, required: true },
+    awbCode: { type: String, required: true },
+    resolved: { type: Boolean, default: false },
+    resolution: {
+      action: { type: String, enum: ["REASSIGN_COURIER", "CANCEL_CUSTOMER_ORDER", "DISMISS"] },
+      resolvedAt: { type: Date },
+      resolvedByAdminId: { type: String },
+      resolvedByAdminEmail: { type: String },
+      reason: { type: String },
+    },
+  },
+  { _id: false }
+);
+
+const AwbCancellationRecordSchema = new Schema<IAwbCancellationRecord>(
+  {
+    cancellationId: { type: String },
+    awbCode: { type: String, required: true },
+    requestedAt: { type: Date, default: Date.now },
+    outcome: {
+      type: String,
+      enum: ["CONFIRMED", "REJECTED_BY_CARRIER", "PENDING_VERIFICATION", "ADMIN_FORCE_OVERRIDE"],
+      required: true,
+    },
+    carrierResponse: { type: String },
+    resolvedAt: { type: Date },
+    actingAdminId: { type: String },
+    actingAdminEmail: { type: String },
+    approvingAdminId: { type: String },
+    approvingAdminEmail: { type: String },
+    evidenceReference: { type: String },
+    overrideReason: { type: String },
+  },
+  { _id: false }
+);
+
+const EmergencyOverrideRequestSchema = new Schema<IEmergencyOverrideRequest>(
+  {
+    requesterAdminId: { type: String, required: true },
+    requesterAdminEmail: { type: String, required: true },
+    requestedAt: { type: Date, default: Date.now },
+    reason: { type: String, required: true },
+    evidenceReference: { type: String, required: true },
+    targetAwbCode: { type: String },
+    targetCancellationId: { type: String },
+    reviewIncidentId: { type: String },
+    shipmentStateAtRequest: { type: String },
+    status: {
+      type: String,
+      enum: ["PENDING_APPROVAL", "APPROVED", "REJECTED"],
+      default: "PENDING_APPROVAL",
+    },
+    reviewedAt: { type: Date },
+    reviewerAdminId: { type: String },
+    reviewerAdminEmail: { type: String },
+    reviewNote: { type: String },
+  },
+  { _id: false }
+);
+
+const OrderShipmentSchema = new Schema<IOrderShipment>(
+  {
+    carrier: { type: String },
+    trackingNumber: { type: String },
+    trackingUrl: { type: String },
+    shippedAt: { type: Date },
+    deliveredAt: { type: Date },
+
+    shiprocketOrderId: { type: Number },
+    shiprocketShipmentId: { type: Number },
+    courierCompanyId: { type: Number },
+    courierName: { type: String },
+    awbCode: { type: String },
+
+    labelUrl: { type: String },
+    manifestUrl: { type: String },
+
+    pickupLocation: { type: String },
+    pickupScheduledDate: { type: Date },
+    pickupTokenNumber: { type: String },
+
+    currentShippingStatus: { type: String },
+    currentStatusCode: { type: Number },
+    estimatedDeliveryDate: { type: Date },
+    trackingActivities: { type: [OrderTrackingActivitySchema], default: [] },
+
+    parcel: { type: OrderParcelSpecsSchema },
+
+    shipmentState: {
+      type: String,
+      enum: [
+        "IDLE",
+        "CREATING_ORDER",
+        "ORDER_CREATED",
+        "ASSIGNING_AWB",
+        "AWB_ASSIGNED",
+        "GENERATING_LABEL",
+        "LABEL_GENERATED",
+        "SCHEDULING_PICKUP",
+        "PICKUP_SCHEDULED",
+        "MANIFEST_GENERATING",
+        "MANIFEST_GENERATED",
+        "LOGISTICS_READY",
+        "FAILED",
+        "RECONCILIATION_REQUIRED",
+        "REASSIGNMENT_BLOCKED",
+      ],
+      default: "IDLE",
+    },
+    operationId: { type: String },
+    lockTimestamp: { type: Date },
+    lastFailedStep: {
+      type: String,
+      enum: [
+        "CREATE_ORDER",
+        "ASSIGN_AWB",
+        "GENERATE_LABEL",
+        "SCHEDULE_PICKUP",
+        "GENERATE_MANIFEST",
+      ],
+    },
+    lastError: { type: String },
+
+    carrierCancellations: { type: [CarrierCancellationEventSchema], default: [] },
+    awbCancellations: { type: [AwbCancellationRecordSchema], default: [] },
+    overrideRequest: { type: EmergencyOverrideRequestSchema },
+
+    requiresReview: { type: Boolean, default: false },
+    reviewReason: { type: String },
+    reviewIncidentId: { type: String },
+    reviewCategory: { type: String },
+    reviewAcknowledgedAt: { type: Date },
   },
   { _id: false }
 );
@@ -218,13 +534,17 @@ const OrderSchema = new Schema<IOrder>(
     },
     stockAppliedAt: { type: Date },
     cancellationReason: { type: String },
-    shipment: {
-      carrier: { type: String },
-      trackingNumber: { type: String },
-      trackingUrl: { type: String },
-      shippedAt: { type: Date },
-      deliveredAt: { type: Date },
+    shipment: { type: OrderShipmentSchema, default: null },
+    stockRestorationState: {
+      type: String,
+      enum: ["NOT_APPLIED", "PENDING", "PARTIALLY_RESTORED", "COMPLETED"],
+      default: "NOT_APPLIED",
     },
+    stockRestorationWorkerId: { type: String },
+    stockRestorationLeaseExpiresAt: { type: Date },
+    stockRestorationStartedAt: { type: Date },
+    stockRestoredAt: { type: Date },
+    lastRestorationError: { type: String },
     statusHistory: { type: [OrderStatusHistorySchema], default: [] },
   },
   {
@@ -236,6 +556,15 @@ OrderSchema.index({ userId: 1, createdAt: -1 });
 OrderSchema.index({ paymentStatus: 1, createdAt: -1 });
 OrderSchema.index({ fulfilmentStatus: 1, createdAt: -1 });
 OrderSchema.index({ "customer.phone": 1, createdAt: -1 });
+OrderSchema.index({ "shipment.awbCode": 1 }, { sparse: true });
+OrderSchema.index({ "shipment.shiprocketOrderId": 1 }, { sparse: true });
+OrderSchema.index({ "shipment.shiprocketShipmentId": 1 }, { sparse: true });
+OrderSchema.index({ "shipment.shipmentState": 1 }, { sparse: true });
+OrderSchema.index({ "shipment.requiresReview": 1 }, { sparse: true });
+OrderSchema.index(
+  { stockRestorationState: 1, stockRestorationLeaseExpiresAt: 1 },
+  { sparse: true }
+);
 
 export const Order: Model<IOrder> =
   mongoose.models.Order || mongoose.model<IOrder>("Order", OrderSchema);

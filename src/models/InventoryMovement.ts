@@ -26,7 +26,7 @@ const InventoryMovementSchema = new Schema<IInventoryMovement>(
     orderId: { type: Schema.Types.ObjectId, ref: "Order" },
     actorType: { type: String, enum: ["SYSTEM", "ADMIN"], required: true },
     actorId: { type: String },
-    idempotencyKey: { type: String, required: true, unique: true, index: true },
+    idempotencyKey: { type: String, required: true },
     createdAt: { type: Date, default: Date.now, index: true },
   },
   {
@@ -34,6 +34,7 @@ const InventoryMovementSchema = new Schema<IInventoryMovement>(
   }
 );
 
+InventoryMovementSchema.index({ idempotencyKey: 1 }, { unique: true });
 InventoryMovementSchema.index({ productId: 1, createdAt: -1 });
 
 export const InventoryMovement: Model<IInventoryMovement> =

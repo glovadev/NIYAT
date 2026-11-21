@@ -103,12 +103,17 @@ export async function POST(req: NextRequest) {
       message: "Administrator session established",
     });
 
+    const isHttps =
+      req.nextUrl.protocol === "https:" ||
+      req.headers.get("x-forwarded-proto") === "https" ||
+      process.env.SITE_URL?.startsWith("https://");
+
     response.cookies.set({
       name: "__session",
       value: token,
       maxAge: 60 * 60 * 24 * 7, // 7 days
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: Boolean(isHttps),
       path: "/",
       sameSite: "lax",
     });

@@ -20,15 +20,22 @@ export async function POST(req: NextRequest) {
   try {
     // Check admin authorization with dev-mode resilience
     let authorized = false;
+    let authErrorResponse = null;
     try {
       const adminCheck = await requireAdmin(req, "STAFF");
       authorized = adminCheck.authorized;
+      if (!authorized) {
+        authErrorResponse = adminCheck.response;
+      }
     } catch {
       authorized = process.env.NODE_ENV === "development";
     }
 
     if (!authorized && process.env.NODE_ENV !== "development") {
-      return apiError("UNAUTHORIZED", "Staff or Administrator privileges required", 401);
+      return (
+        authErrorResponse ||
+        apiError("UNAUTHORIZED", "Staff or Administrator privileges required", 401)
+      );
     }
 
     const formData = await req.formData();
