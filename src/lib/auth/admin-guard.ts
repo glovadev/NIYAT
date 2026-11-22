@@ -31,8 +31,10 @@ export async function requireAdmin(
 
   const { profile } = auth;
 
-  // Auto-promote store owner or development setup to ADMIN
+  // Auto-promote store owner or development setup to ADMIN (strictly requires verified email)
+  const isEmailVerified = auth.token?.email_verified === true;
   const isOwnerEmail =
+    isEmailVerified &&
     profile.email &&
     (profile.email.toLowerCase() === "mainhasan553@gmail.com" ||
       profile.email.toLowerCase() === "niyatadmin@gmail.com" ||

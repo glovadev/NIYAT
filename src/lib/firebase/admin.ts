@@ -53,103 +53,39 @@ export function getAdminAuth(): Auth {
 }
 
 /**
- * Verifies a Firebase ID token sent from the client Authorization header
- * Resilient to missing service account private keys by falling back to Google's public tokeninfo service
+ * Verifies a Firebase ID token using the official Firebase Admin SDK.
+ * Cryptographically checks signature against Google's public certificates,
+ * verifies project ID audience, issuer (https://securetoken.google.com/<projectId>),
+ * expiration, issue time, and auth time.
+ *
+ * Fails closed and returns null if Admin SDK is unavailable or verification fails.
  */
 export async function verifyIdToken(token: string): Promise<DecodedIdToken | null> {
-  // 1. Try Firebase Admin SDK first (if private key is configured)
-  if (serverEnv.FIREBASE_CLIENT_EMAIL && serverEnv.FIREBASE_PRIVATE_KEY) {
-    try {
-      const auth = getAdminAuth();
-      return await auth.verifyIdToken(token);
-    } catch (_) {}
+  if (!token || typeof token !== "string" || token.trim().length === 0) {
+    return null;
   }
 
-  // 2. Fast Fallback: Check if token is a custom JWT signed with server JWT_SECRET
+  // Primary production verification: Firebase Admin SDK
   try {
-    const jwt = (await import("jsonwebtoken")).default;
-    const payload = jwt.verify(token, serverEnv.JWT_SECRET) as any;
-    if (payload && payload.uid) {
-      return {
-        uid: payload.uid,
-        email: payload.email,
-        name: payload.name,
-        role: payload.role,
-        auth_time: Math.floor(Date.now() / 1000),
-        user_id: payload.uid,
-        sub: payload.uid,
-        iat: Math.floor(Date.now() / 1000),
-        exp: Math.floor(Date.now() / 1000) + 3600,
-        iss: "niyat-server",
-        aud: "niyat-app",
-        firebase: { identities: {}, sign_in_provider: "custom" },
-      } as DecodedIdToken;
-    }
-  } catch (_) {}
-
-  // 3. Fallback: Parse Firebase ID token payload if issued for our project
-  try {
-    const jwt = (await import("jsonwebtoken")).default;
-    const decodedUnverified = jwt.decode(token) as any;
-    const expectedProjectId = serverEnv.FIREBASE_PROJECT_ID || "niyat-29baf";
-    if (
-      decodedUnverified &&
-      decodedUnverified.aud === expectedProjectId &&
-      decodedUnverified.iss === `https://securetoken.google.com/${expectedProjectId}` &&
-      decodedUnverified.exp &&
-      decodedUnverified.exp > Math.floor(Date.now() / 1000)
-    ) {
-      return {
-        uid: decodedUnverified.sub || decodedUnverified.user_id,
-        email: decodedUnverified.email,
-        email_verified: decodedUnverified.email_verified === true,
-        name: decodedUnverified.name,
-        picture: decodedUnverified.picture,
-        iss: decodedUnverified.iss,
-        aud: decodedUnverified.aud,
-        auth_time: decodedUnverified.auth_time || Math.floor(Date.now() / 1000),
-        user_id: decodedUnverified.sub || decodedUnverified.user_id,
-        sub: decodedUnverified.sub || decodedUnverified.user_id,
-        iat: decodedUnverified.iat || Math.floor(Date.now() / 1000),
-        exp: decodedUnverified.exp,
-        firebase: decodedUnverified.firebase || { identities: {}, sign_in_provider: "password" },
-      } as DecodedIdToken;
-    }
-  } catch (_) {}
-
-  // 4. Fallback: Verify with Google's public OAuth2 tokeninfo service
-  try {
-    const res = await fetch(
-      `https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(token)}`
-    );
-    if (res.ok) {
-      const data = await res.json();
-      const expectedProjectId = serverEnv.FIREBASE_PROJECT_ID || "niyat-29baf";
+    const auth = getAdminAuth();
+    if (auth) {
+      const decoded = await auth.verifyIdToken(token);
       if (
-        data &&
-        (data.aud === expectedProjectId ||
-          data.iss === `https://securetoken.google.com/${expectedProjectId}`)
+        decoded &&
+        typeof decoded.uid === "string" &&
+        decoded.uid.trim().length > 0 &&
+        Number.isFinite(decoded.exp) &&
+        Number.isFinite(decoded.iat) &&
+        Number.isFinite(decoded.auth_time)
       ) {
-        return {
-          uid: data.sub || data.user_id,
-          email: data.email,
-          email_verified: data.email_verified === "true" || data.email_verified === true,
-          name: data.name,
-          picture: data.picture,
-          iss: data.iss,
-          aud: data.aud,
-          auth_time: Math.floor(Date.now() / 1000),
-          user_id: data.sub || data.user_id,
-          sub: data.sub || data.user_id,
-          iat: Math.floor(Date.now() / 1000),
-          exp: Math.floor(Date.now() / 1000) + 3600,
-          firebase: { identities: {}, sign_in_provider: "google.com" },
-        } as DecodedIdToken;
+        return decoded;
       }
     }
-  } catch (_) {}
+  } catch (err: unknown) {
+    // If Admin SDK explicitly rejects token (bad signature, expired, wrong project, revoked), fail closed
+  }
 
-  console.error("Firebase ID token verification failed: all verification paths exhausted");
+  // STRICT SECURITY: Fail closed. Never use unverified decoding or generic tokeninfo.
   return null;
 }
 
@@ -193,21 +129,29 @@ export async function verifySessionCookie(
   try {
     const jwt = (await import("jsonwebtoken")).default;
     const payload = jwt.verify(cookie, serverEnv.JWT_SECRET) as any;
-    if (payload && payload.uid) {
-      return {
-        uid: payload.uid,
-        email: payload.email,
-        name: payload.name,
-        role: payload.role,
-        auth_time: Math.floor(Date.now() / 1000),
-        user_id: payload.uid,
-        sub: payload.uid,
-        iat: Math.floor(Date.now() / 1000),
-        exp: Math.floor(Date.now() / 1000) + 3600,
-        iss: "niyat-server",
-        aud: "niyat-app",
-        firebase: { identities: {}, sign_in_provider: "custom" },
-      } as DecodedIdToken;
+    if (payload && typeof payload.uid === "string" && payload.uid.trim().length > 0) {
+      const expNum = typeof payload.exp === "number" ? payload.exp : NaN;
+      const iatNum = typeof payload.iat === "number" ? payload.iat : NaN;
+      const authTimeNum = typeof payload.auth_time === "number" ? payload.auth_time : iatNum;
+      const nowSec = Math.floor(Date.now() / 1000);
+
+      if (Number.isFinite(expNum) && expNum > nowSec && Number.isFinite(iatNum)) {
+        return {
+          uid: payload.uid,
+          email: payload.email,
+          email_verified: payload.email_verified === true,
+          name: payload.name,
+          role: payload.role,
+          auth_time: Number.isFinite(authTimeNum) ? authTimeNum : nowSec,
+          user_id: payload.uid,
+          sub: payload.uid,
+          iat: iatNum,
+          exp: expNum,
+          iss: "niyat-server",
+          aud: "niyat-app",
+          firebase: { identities: {}, sign_in_provider: "custom" },
+        } as DecodedIdToken;
+      }
     }
   } catch (_) {}
 

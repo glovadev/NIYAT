@@ -18,6 +18,17 @@ export async function POST(req: NextRequest) {
       return apiError("VALIDATION_ERROR", "Email and password are required", 400);
     }
 
+    // Require valid, non-empty ADMIN_PASSWORD environment variable (FAIL SECURE)
+    const configuredMasterPassword = process.env.ADMIN_PASSWORD?.trim();
+    if (!configuredMasterPassword) {
+      console.error("[Security] Administrator login attempted but ADMIN_PASSWORD environment variable is missing or empty");
+      return apiError(
+        "AUTH_UNAVAILABLE",
+        "Administrator authentication is currently unavailable.",
+        500
+      );
+    }
+
     await connectToDatabase();
 
     // Recognized store owner / admin accounts
@@ -29,9 +40,6 @@ export async function POST(req: NextRequest) {
     ];
 
     const isRecognizedAdmin = recognizedAdminEmails.includes(email);
-
-    // Standard configured master password from environment (or default master password)
-    const configuredMasterPassword = process.env.ADMIN_PASSWORD || "Niyat@2026!";
 
     let profile = await UserProfile.findOne({ email });
 
@@ -55,12 +63,19 @@ export async function POST(req: NextRequest) {
       return apiError("FORBIDDEN", "Admin account is disabled", 403);
     }
 
-    // Verify credentials: check master password or stored password hash
+    // Verify credentials: check master password (constant-time) or stored password hash
     let passwordValid = false;
 
-    if (password === configuredMasterPassword) {
-      passwordValid = true;
-    } else if (profile.passwordHash) {
+    if (configuredMasterPassword) {
+      const crypto = await import("crypto");
+      const a = Buffer.from(password, "utf8");
+      const b = Buffer.from(configuredMasterPassword, "utf8");
+      if (a.length === b.length && crypto.timingSafeEqual(a, b)) {
+        passwordValid = true;
+      }
+    }
+
+    if (!passwordValid && profile.passwordHash) {
       passwordValid = verifyPassword(password, profile.passwordHash);
     }
 
@@ -84,6 +99,7 @@ export async function POST(req: NextRequest) {
         uid: profile.firebaseUid,
         profileId: profile._id.toString(),
         email: profile.email,
+        email_verified: true,
         name: profile.name,
         role: profile.role,
       },
@@ -104,7 +120,7 @@ export async function POST(req: NextRequest) {
     });
 
     const isHttps =
-      req.nextUrl.protocol === "https:" ||
+      req.nextUrl?.protocol === "https:" ||
       req.headers.get("x-forwarded-proto") === "https" ||
       process.env.SITE_URL?.startsWith("https://");
 

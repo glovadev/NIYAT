@@ -76,8 +76,8 @@ export async function getAuthenticatedUser(
     if (!decoded) {
       if (req) {
         rawCookieToken =
-          req.cookies.get("__distributor_session")?.value ||
-          req.cookies.get("__session")?.value;
+          req.cookies?.get("__distributor_session")?.value ||
+          req.cookies?.get("__session")?.value;
       } else {
         const cookieStore = await cookies();
         rawCookieToken =
@@ -87,8 +87,8 @@ export async function getAuthenticatedUser(
 
       if (rawCookieToken) {
         decoded = await verifySessionCookie(rawCookieToken);
-        // Fallback for development if sessionCookie contains the idToken
-        if (!decoded) {
+        // Fallback strictly for local development if sessionCookie contains the idToken
+        if (!decoded && process.env.NODE_ENV === "development") {
           decoded = await verifyIdToken(rawCookieToken);
         }
       }
@@ -124,6 +124,7 @@ export async function getAuthenticatedUser(
                 token: {
                   uid: profile.firebaseUid,
                   email: profile.email,
+                  email_verified: payload.email_verified === true,
                   name: profile.name,
                   role: profile.role,
                 } as any,
@@ -140,18 +141,30 @@ export async function getAuthenticatedUser(
     }
 
     // 3. Load or link UserProfile in MongoDB
+    // Security: never link or re-associate profiles by email unless the email is cryptographically verified (email_verified === true)
     await connectToDatabase();
-    let profile = await UserProfile.findOne({ firebaseUid: decoded.uid });
+    const isEmailVerified = decoded.email_verified === true;
+    let profile = await UserProfile.findOne({
+      $or: [
+        { firebaseUid: decoded.uid },
+        ...(decoded.email && isEmailVerified
+          ? [{ email: decoded.email.toLowerCase() }]
+          : []),
+      ],
+    });
 
     if (!profile) {
       profile = await UserProfile.create({
         firebaseUid: decoded.uid,
         name: decoded.name || decoded.email?.split("@")[0] || "Customer",
-        email: decoded.email,
+        email: decoded.email?.toLowerCase(),
         role: "CUSTOMER",
         status: "ACTIVE",
         communicationPreferences: { marketingEmail: false },
       });
+    } else if (profile.firebaseUid !== decoded.uid && isEmailVerified) {
+      profile.firebaseUid = decoded.uid;
+      await profile.save();
     }
 
     if (profile.status === "DISABLED") {

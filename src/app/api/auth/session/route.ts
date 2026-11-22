@@ -22,11 +22,18 @@ export async function POST(req: NextRequest) {
 
     // Connect to DB and sync UserProfile
     await connectToDatabase();
+    const isEmailVerified = decoded.email_verified === true;
     let profile = await UserProfile.findOne({
-      $or: [{ firebaseUid: decoded.uid }, ...(decoded.email ? [{ email: decoded.email }] : [])],
+      $or: [
+        { firebaseUid: decoded.uid },
+        ...(decoded.email && isEmailVerified
+          ? [{ email: decoded.email.toLowerCase() }]
+          : []),
+      ],
     });
 
     const isOwnerEmail =
+      isEmailVerified &&
       decoded.email &&
       (decoded.email.toLowerCase() === "mainhasan553@gmail.com" ||
         decoded.email.toLowerCase() === "niyatadmin@gmail.com" ||
@@ -37,13 +44,13 @@ export async function POST(req: NextRequest) {
       profile = await UserProfile.create({
         firebaseUid: decoded.uid,
         name: decoded.name || decoded.email?.split("@")[0] || "Administrator",
-        email: decoded.email,
+        email: decoded.email?.toLowerCase(),
         role: isOwnerEmail ? "ADMIN" : "CUSTOMER",
         status: "ACTIVE",
         communicationPreferences: { marketingEmail: false },
       });
     } else {
-      if (profile.firebaseUid !== decoded.uid) {
+      if (profile.firebaseUid !== decoded.uid && isEmailVerified) {
         profile.firebaseUid = decoded.uid;
       }
       if (isOwnerEmail && profile.role !== "ADMIN") {
@@ -56,11 +63,16 @@ export async function POST(req: NextRequest) {
       return apiError("FORBIDDEN", "Your account is disabled. Please contact support.", 403);
     }
 
-    // Create session cookie for 5 days
+    // Create secure session cookie for 5 days
     let sessionCookie = await createSessionCookie(idToken);
     if (!sessionCookie) {
-      // In local dev without private key service account, fallback to idToken as session cookie
-      sessionCookie = idToken;
+      if (process.env.NODE_ENV === "development") {
+        // Only in local development: fallback to verified idToken
+        sessionCookie = idToken;
+      } else {
+        // Production: fail closed to prevent insecure session establishment
+        return apiError("UNAUTHENTICATED", "Failed to establish cryptographically secure session", 401);
+      }
     }
 
     const response = apiSuccess({
@@ -75,13 +87,18 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    const isHttps =
+      req.headers.get("x-forwarded-proto") === "https" ||
+      req.nextUrl?.protocol === "https:" ||
+      process.env.NODE_ENV === "production";
+
     // Set secure HTTP-only session cookie
     response.cookies.set({
       name: "__session",
       value: sessionCookie,
       maxAge: 60 * 60 * 24 * 5, // 5 days in seconds
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: isHttps,
       path: "/",
       sameSite: "lax",
     });
