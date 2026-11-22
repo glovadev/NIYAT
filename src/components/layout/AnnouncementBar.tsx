@@ -1,55 +1,100 @@
 "use client";
 
 import React, { useState } from "react";
-import { Sparkles, Crown, Truck, ShieldCheck, Tag, X } from "lucide-react";
+import Link from "next/link";
+import { Sparkles, ArrowRight, X } from "lucide-react";
 
-export function AnnouncementBar() {
-  const [isVisible, setIsVisible] = useState(true);
+interface AnnouncementBarProps {
+  text?: string;
+  link?: string;
+  badge?: string;
+  enabled?: boolean;
+}
 
-  if (!isVisible) return null;
+export function AnnouncementBar({
+  text = "Complimentary courier dispatch on orders above ₹999 | Discover Pure UAE Radiance",
+  link = "/notices",
+  badge,
+  enabled = true,
+}: AnnouncementBarProps) {
+  const [dismissed, setDismissed] = useState(false);
+
+  if (!enabled || dismissed || !text?.trim()) {
+    return null;
+  }
+
+  const cleanText = text.replace(/\s+/g, " ");
 
   return (
-    <div className="bg-gradient-to-r from-[#061510] via-[#0B251D] to-[#061510] text-[#F4E8C1] text-[11px] sm:text-xs py-2 px-4 relative z-40 border-b border-[#D4AF37]/30 font-medium shadow-sm">
-      <div className="max-w-7xl mx-auto flex items-center justify-between sm:justify-center gap-4 sm:gap-8 text-center pr-6 overflow-x-auto no-scrollbar">
-        {/* Item 1: Dubai Formulation Heritage */}
-        <div className="flex items-center gap-1.5 shrink-0">
-          <Crown className="w-3.5 h-3.5 text-[#D4AF37]" />
-          <span className="tracking-wide">
-            <strong className="text-white font-semibold">DUBAI LUXURY FORMULATION</strong> • Pure Royal Saffron & Rose
-          </span>
-        </div>
-
-        {/* Divider star */}
-        <span className="hidden md:inline-block text-[#D4AF37]/60">✧</span>
-
-        {/* Item 2: Free Shipping */}
-        <div className="hidden sm:flex items-center gap-1.5 shrink-0">
-          <Truck className="w-3.5 h-3.5 text-[#D4AF37]" />
-          <span>Complimentary White-Glove Shipping Above ₹499</span>
-        </div>
-
-        {/* Divider star */}
-        <span className="hidden md:inline-block text-[#D4AF37]/60">✧</span>
-
-        {/* Item 3: Coupon Code */}
-        <div className="flex items-center gap-1.5 shrink-0 font-medium">
-          <Sparkles className="w-3.5 h-3.5 text-[#D4AF37]" />
-          <span>
-            Royal Privilege: 10% Off First Order with code{" "}
-            <span className="inline-block bg-gradient-to-r from-[#D4AF37] to-[#B38728] text-slate-950 font-bold px-2 py-0.5 rounded text-[10px] tracking-wider ml-1 shadow-xs">
-              NIYAT10
+    <aside
+      aria-label="Announcement Bar"
+      className="relative z-50 w-full bg-gradient-to-r from-[#061B14] via-[#0A261D] to-[#061B14] border-b border-[#D4AF37]/30 text-white text-[11px] sm:text-xs py-1.5 px-3 sm:px-4 overflow-hidden select-none"
+    >
+      <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
+        {/* Left Pinned Badge */}
+        {badge && (
+          <div className="shrink-0 flex items-center gap-1.5 z-10">
+            <span className="hidden sm:flex items-center justify-center w-4 h-4 rounded-full bg-[#D4AF37]/20 border border-[#D4AF37]/40 shrink-0">
+              <Sparkles className="w-2.5 h-2.5 text-[#D4AF37]" />
             </span>
-          </span>
+            <span className="inline-block px-2 py-0.5 rounded-full text-[9px] font-bold tracking-wider uppercase bg-[#D4AF37]/25 text-[#FCF6BA] border border-[#D4AF37]/40 whitespace-nowrap">
+              {badge}
+            </span>
+          </div>
+        )}
+
+        {/* Center Continuous Moving Line (Guaranteed Strictly 1 Line) */}
+        <div className="relative flex-1 overflow-hidden min-w-0">
+          <div className="absolute left-0 inset-y-0 w-6 bg-gradient-to-r from-[#061B14] to-transparent pointer-events-none z-10" />
+          <div className="absolute right-0 inset-y-0 w-6 bg-gradient-to-l from-[#061B14] to-transparent pointer-events-none z-10" />
+
+          <div className="animate-marquee hover:[animation-play-state:paused] active:[animation-play-state:paused] flex items-center whitespace-nowrap py-0.5">
+            {/* Set 1 */}
+            <div className="flex items-center shrink-0 gap-6 pr-6">
+              <span className="text-[#FCF6BA] font-medium tracking-wide">
+                {cleanText}
+              </span>
+              <span className="text-[#D4AF37]/40 text-xs">✧</span>
+            </div>
+
+            {/* Set 2 (Duplicate for continuous loop) */}
+            <div className="flex items-center shrink-0 gap-6 pr-6" aria-hidden="true">
+              <span className="text-[#FCF6BA] font-medium tracking-wide">
+                {cleanText}
+              </span>
+              <span className="text-[#D4AF37]/40 text-xs">✧</span>
+            </div>
+
+            {/* Set 3 (Buffer) */}
+            <div className="hidden md:flex items-center shrink-0 gap-6 pr-6" aria-hidden="true">
+              <span className="text-[#FCF6BA] font-medium tracking-wide">
+                {cleanText}
+              </span>
+              <span className="text-[#D4AF37]/40 text-xs">✧</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Right Pinned Details & Dismiss Button */}
+        <div className="shrink-0 flex items-center gap-2.5 z-10">
+          <Link
+            href={link || "/notices"}
+            className="inline-flex items-center gap-1 font-semibold text-white hover:text-[#D4AF37] underline decoration-[#D4AF37]/50 underline-offset-2 text-[11px] transition-colors whitespace-nowrap"
+          >
+            <span>Details</span>
+            <ArrowRight className="w-3 h-3" />
+          </Link>
+
+          <button
+            type="button"
+            onClick={() => setDismissed(true)}
+            aria-label="Dismiss announcement"
+            className="p-1 rounded-md text-white/60 hover:text-white hover:bg-white/10 transition shrink-0"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
         </div>
       </div>
-
-      <button
-        onClick={() => setIsVisible(false)}
-        className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 text-[#F4E8C1]/60 hover:text-white p-1 transition-colors"
-        aria-label="Dismiss announcement"
-      >
-        <X className="w-3.5 h-3.5" />
-      </button>
-    </div>
+    </aside>
   );
 }

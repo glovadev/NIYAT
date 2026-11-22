@@ -13,3 +13,4 @@ export * from "./NewsletterSubscription";
 export * from "./WebhookEvent";
 export * from "./AuditLog";
 export * from "./Refund";
+export * from "./Notice";

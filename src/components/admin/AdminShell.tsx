@@ -26,6 +26,7 @@ import {
   Lock,
   Building2,
   Truck,
+  Megaphone,
 } from "lucide-react";
 
 interface AdminShellProps {
@@ -35,6 +36,7 @@ interface AdminShellProps {
 const navLinks = [
   { name: "Overview", href: "/admin", icon: LayoutDashboard },
   { name: "Hero Banners", href: "/admin/banners", icon: SlidersHorizontal },
+  { name: "Notices & Updates", href: "/admin/notices", icon: Megaphone },
   { name: "Products", href: "/admin/products", icon: Package },
   { name: "Categories", href: "/admin/categories", icon: FolderTree },
   { name: "Distributors", href: "/admin/distributors", icon: Building2 },

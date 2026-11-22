@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter, usePathname } from "next/navigation";
@@ -8,6 +8,7 @@ import { useCart } from "@/lib/cart/cart-context";
 import { useWishlist } from "@/lib/wishlist/wishlist-context";
 import { useAuth } from "@/lib/auth/auth-context";
 import { AuthModal } from "@/components/auth/AuthModal";
+import { AnnouncementBar } from "./AnnouncementBar";
 import {
   ShoppingBag,
   User,
@@ -28,6 +29,41 @@ export function Navbar() {
   const { user, profile } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [topBanner, setTopBanner] = useState<{
+    enabled: boolean;
+    text: string;
+    link?: string;
+    badge?: string;
+  } | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    fetch("/api/site-settings/public")
+      .then((r) => r.json())
+      .then((res) => {
+        if (!isMounted || !res.success || !res.data) return;
+        const notice = res.data.activeNotice;
+        const siteAnnounce = res.data.announcementBar;
+        if (notice && notice.showOnTopBar) {
+          setTopBanner({
+            enabled: true,
+            text: notice.message || notice.title,
+            link: notice.id ? `/notices/${notice.id}` : "/notices",
+            badge: notice.badge,
+          });
+        } else if (siteAnnounce && siteAnnounce.enabled) {
+          setTopBanner({
+            enabled: true,
+            text: siteAnnounce.text,
+            link: siteAnnounce.link || "/shop",
+          });
+        }
+      })
+      .catch(() => {});
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const isHomeActive = pathname === "/";
   const isShopActive = pathname.startsWith("/shop") || pathname.startsWith("/categories");
@@ -45,6 +81,14 @@ export function Navbar() {
 
   return (
     <>
+      {topBanner?.enabled && (
+        <AnnouncementBar
+          text={topBanner.text}
+          link={topBanner.link}
+          badge={topBanner.badge}
+          enabled={topBanner.enabled}
+        />
+      )}
       <header className="sticky top-0 z-40 w-full bg-[#FFFCF8]/98 backdrop-blur-md border-b border-[#D4AF37]/30 shadow-[0_4px_25px_rgba(212,175,55,0.07)] transition-all">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-20 gap-3 sm:gap-6">
@@ -62,11 +106,16 @@ export function Navbar() {
                   />
                 </div>
                 <div className="flex flex-col items-start">
-                  <span className="font-serif text-2xl sm:text-3xl tracking-[0.2em] font-bold text-[#153D32] leading-none group-hover:text-[#0D2B24] transition-colors">
-                    NIYAT
-                  </span>
+                  <div className="flex items-baseline gap-1 sm:gap-1.5">
+                    <span className="font-serif text-2xl sm:text-3xl tracking-[0.16em] font-bold text-[#153D32] leading-none group-hover:text-[#0D2B24] transition-colors">
+                      NIYAT
+                    </span>
+                    <span className="font-serif text-[11px] sm:text-xs tracking-[0.12em] font-extrabold text-[#B38728] leading-none drop-shadow-[0_1px_1px_rgba(179,135,40,0.2)] select-none">
+                      UAE
+                    </span>
+                  </div>
                   <span className="text-[7.5px] sm:text-[8.5px] tracking-[0.35em] uppercase text-[#A5833F] font-sans font-bold mt-1">
-                    UAE • ROYAL APOTHECARY
+                    ROYAL APOTHECARY
                   </span>
                 </div>
               </Link>
@@ -211,11 +260,16 @@ export function Navbar() {
                       />
                     </div>
                     <div>
-                      <span className="font-serif text-2xl font-bold text-[#153D32] tracking-widest block leading-none">
-                        NIYAT
-                      </span>
-                      <span className="text-[9px] uppercase tracking-widest text-[#172723]/60 mt-1 block">
-                        Skincare with Purpose
+                      <div className="flex items-baseline gap-1">
+                        <span className="font-serif text-2xl font-bold text-[#153D32] tracking-[0.16em] leading-none">
+                          NIYAT
+                        </span>
+                        <span className="font-serif text-[11px] font-extrabold tracking-[0.12em] text-[#B38728] leading-none drop-shadow-[0_1px_1px_rgba(179,135,40,0.2)]">
+                          UAE
+                        </span>
+                      </div>
+                      <span className="text-[9px] uppercase tracking-widest text-[#A5833F] font-bold mt-1 block">
+                        Royal Apothecary
                       </span>
                     </div>
                   </div>

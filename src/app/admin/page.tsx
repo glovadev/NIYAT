@@ -20,6 +20,7 @@ import {
   SlidersHorizontal,
   CheckCircle2,
   Clock,
+  Megaphone,
 } from "lucide-react";
 
 interface DashboardMetrics {
@@ -220,6 +221,19 @@ export default function AdminDashboardPage() {
           <div>
             <div className="text-xs font-semibold text-white">Hero Banners</div>
             <div className="text-[11px] text-slate-400">Sliding carousel & links</div>
+          </div>
+        </Link>
+
+        <Link
+          href="/admin/notices"
+          className="p-4 rounded-xl bg-slate-950/40 border border-slate-800/80 hover:border-amber-400/40 hover:bg-slate-850 transition group flex flex-col justify-between"
+        >
+          <div className="w-8 h-8 rounded-lg bg-slate-800 text-slate-300 flex items-center justify-center mb-3 group-hover:text-amber-400">
+            <Megaphone className="w-4 h-4" />
+          </div>
+          <div>
+            <div className="text-xs font-semibold text-white">Notices & Updates</div>
+            <div className="text-[11px] text-slate-400">Toggle live store notices</div>
           </div>
         </Link>
 

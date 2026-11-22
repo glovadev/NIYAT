@@ -180,6 +180,11 @@ export function Footer() {
                 </Link>
               </li>
               <li>
+                <Link href="/notices" className="hover:text-[#FCF6BA] transition-colors">
+                  Store Notices & Updates
+                </Link>
+              </li>
+              <li>
                 <Link href="/about" className="hover:text-[#FCF6BA] transition-colors">
                   The NIYAT Heritage
                 </Link>
