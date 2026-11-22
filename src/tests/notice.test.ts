@@ -28,7 +28,7 @@ describe("Store Notice & Updates Management Tests", () => {
   let originalUpdateMany: any;
 
   beforeEach(() => {
-    process.env.NODE_ENV = "test";
+    (process.env as any).NODE_ENV = "test";
     process.env.MONGODB_URI = "mongodb://127.0.0.1:27017/niyat_test";
     (global as any).mongooseCache = {
       conn: { connection: { readyState: 1 } } as any,
@@ -218,7 +218,7 @@ describe("Store Notice & Updates Management Tests", () => {
       (process.env as any).NODE_ENV = "development";
       let deactivatedCalled = false;
 
-      Notice.updateMany = async (filter: any, update: any) => {
+      (Notice as any).updateMany = async (filter: any, update: any) => {
         deactivatedCalled = true;
         return { modifiedCount: 1 } as any;
       };
@@ -312,7 +312,7 @@ describe("Store Notice & Updates Management Tests", () => {
       (process.env as any).NODE_ENV = "development";
       const targetId = new mongoose.Types.ObjectId();
 
-      Notice.findByIdAndDelete = async (id: any) => ({ _id: targetId } as any);
+      (Notice as any).findByIdAndDelete = async (id: any) => ({ _id: targetId } as any);
 
       const req = makeNextRequest(`http://localhost:3000/api/admin/notices/${targetId}`, {
         method: "DELETE",

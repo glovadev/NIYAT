@@ -38,6 +38,67 @@ const ICONS = {
   INFO: Info,
 };
 
+type ThemeKey = "EMERALD" | "GOLD" | "DARK" | "AMBER";
+
+const THEME_STYLES: Record<
+  ThemeKey,
+  {
+    wrapper: string;
+    badge: string;
+    iconBox: string;
+    title: string;
+    body: string;
+    cta: string;
+    flair: string;
+    meta: string;
+  }
+> = {
+  EMERALD: {
+    wrapper:
+      "bg-gradient-to-br from-[#061B14] via-[#0A261D] to-[#04120D] text-white border-[#D4AF37]/40 shadow-[0_16px_50px_rgba(10,38,29,0.25)]",
+    badge: "bg-[#D4AF37]/20 text-[#FCF6BA] border-[#D4AF37]/40",
+    iconBox: "bg-[#D4AF37]/20 border-[#D4AF37]/50 text-[#FCF6BA]",
+    title: "text-white",
+    body: "text-white/90",
+    cta: "bg-gradient-to-r from-[#D4AF37] via-[#E5C158] to-[#AA7C11] text-[#0A261D] hover:shadow-[0_6px_25px_rgba(212,175,55,0.4)]",
+    flair: "text-[#D4AF37]/50",
+    meta: "text-[#FCF6BA]/70",
+  },
+  GOLD: {
+    wrapper:
+      "bg-gradient-to-br from-[#FAF0D7] via-[#FFF9ED] to-[#F5E6C4] text-[#0A261D] border-[#D4AF37]/60 shadow-[0_16px_50px_rgba(212,175,55,0.18)]",
+    badge: "bg-[#0A261D]/10 text-[#0A261D] border-[#0A261D]/25 font-bold",
+    iconBox: "bg-[#D4AF37]/30 border-[#D4AF37]/70 text-[#0A261D]",
+    title: "text-[#0A261D]",
+    body: "text-stone-800",
+    cta: "bg-[#0A261D] text-[#FCF6BA] hover:bg-[#153D32] hover:shadow-[0_6px_25px_rgba(10,38,29,0.3)]",
+    flair: "text-[#B38728]/50",
+    meta: "text-stone-600",
+  },
+  DARK: {
+    wrapper:
+      "bg-gradient-to-br from-[#0B0F19] via-[#111827] to-[#070A10] text-white border-slate-700/80 shadow-[0_16px_50px_rgba(0,0,0,0.4)]",
+    badge: "bg-slate-800 text-amber-300 border-amber-400/30",
+    iconBox: "bg-amber-400/15 border-amber-400/40 text-amber-300",
+    title: "text-white",
+    body: "text-slate-200",
+    cta: "bg-amber-400 text-slate-950 hover:bg-amber-300 hover:shadow-[0_6px_25px_rgba(251,191,36,0.3)] font-semibold",
+    flair: "text-amber-400/40",
+    meta: "text-slate-400",
+  },
+  AMBER: {
+    wrapper:
+      "bg-gradient-to-br from-[#FFFBEB] via-[#FEF3C7] to-[#FDE68A] text-stone-900 border-amber-300/80 shadow-[0_16px_50px_rgba(245,158,11,0.15)]",
+    badge: "bg-amber-500/20 text-amber-900 border-amber-400/50 font-bold",
+    iconBox: "bg-amber-500/25 border-amber-500/60 text-amber-900",
+    title: "text-stone-900",
+    body: "text-stone-800",
+    cta: "bg-amber-900 text-amber-50 hover:bg-amber-950 hover:shadow-[0_6px_25px_rgba(120,53,15,0.3)] font-semibold",
+    flair: "text-amber-600/40",
+    meta: "text-stone-600",
+  },
+};
+
 interface PageProps {
   searchParams: Promise<{ id?: string }>;
 }
@@ -74,56 +135,15 @@ export default async function NoticesPage({ searchParams }: PageProps) {
     console.error("NoticesPage: Failed to fetch notices from database:", error);
   }
 
-  const theme = featuredNotice?.theme || "EMERALD";
+  const rawTheme = String(featuredNotice?.theme || "EMERALD");
+  const theme: ThemeKey =
+    rawTheme === "GOLD" || rawTheme === "DARK" || rawTheme === "AMBER"
+      ? (rawTheme as ThemeKey)
+      : "EMERALD";
   const iconKey = (featuredNotice?.icon || "SPARKLES") as keyof typeof ICONS;
   const IconComp = ICONS[iconKey] || Sparkles;
 
-  const themeStyles = {
-    EMERALD: {
-      wrapper:
-        "bg-gradient-to-br from-[#061B14] via-[#0A261D] to-[#04120D] text-white border-[#D4AF37]/40 shadow-[0_16px_50px_rgba(10,38,29,0.25)]",
-      badge: "bg-[#D4AF37]/20 text-[#FCF6BA] border-[#D4AF37]/40",
-      iconBox: "bg-[#D4AF37]/20 border-[#D4AF37]/50 text-[#FCF6BA]",
-      title: "text-white",
-      body: "text-white/90",
-      cta: "bg-gradient-to-r from-[#D4AF37] via-[#E5C158] to-[#AA7C11] text-[#0A261D] hover:shadow-[0_6px_25px_rgba(212,175,55,0.4)]",
-      flair: "text-[#D4AF37]/50",
-      meta: "text-[#FCF6BA]/70",
-    },
-    GOLD: {
-      wrapper:
-        "bg-gradient-to-br from-[#FAF0D7] via-[#FFF9ED] to-[#F5E6C4] text-[#0A261D] border-[#D4AF37]/60 shadow-[0_16px_50px_rgba(212,175,55,0.18)]",
-      badge: "bg-[#0A261D]/10 text-[#0A261D] border-[#0A261D]/25 font-bold",
-      iconBox: "bg-[#D4AF37]/30 border-[#D4AF37]/70 text-[#0A261D]",
-      title: "text-[#0A261D]",
-      body: "text-stone-800",
-      cta: "bg-[#0A261D] text-[#FCF6BA] hover:bg-[#153D32] hover:shadow-[0_6px_25px_rgba(10,38,29,0.3)]",
-      flair: "text-[#B38728]/50",
-      meta: "text-stone-600",
-    },
-    DARK: {
-      wrapper:
-        "bg-gradient-to-br from-[#0B0F19] via-[#111827] to-[#070A10] text-white border-slate-700/80 shadow-[0_16px_50px_rgba(0,0,0,0.4)]",
-      badge: "bg-slate-800 text-amber-300 border-amber-400/30",
-      iconBox: "bg-amber-400/15 border-amber-400/40 text-amber-300",
-      title: "text-white",
-      body: "text-slate-200",
-      cta: "bg-amber-400 text-slate-950 hover:bg-amber-300 hover:shadow-[0_6px_25px_rgba(251,191,36,0.3)] font-semibold",
-      flair: "text-amber-400/40",
-      meta: "text-slate-400",
-    },
-    AMBER: {
-      wrapper:
-        "bg-gradient-to-br from-[#FFFBEB] via-[#FEF3C7] to-[#FDE68A] text-stone-900 border-amber-300/80 shadow-[0_16px_50px_rgba(245,158,11,0.15)]",
-      badge: "bg-amber-500/20 text-amber-900 border-amber-400/50 font-bold",
-      iconBox: "bg-amber-500/25 border-amber-500/60 text-amber-900",
-      title: "text-stone-900",
-      body: "text-stone-800",
-      cta: "bg-amber-900 text-amber-50 hover:bg-amber-950 hover:shadow-[0_6px_25px_rgba(120,53,15,0.3)] font-semibold",
-      flair: "text-amber-600/40",
-      meta: "text-stone-600",
-    },
-  }[theme];
+  const themeStyles = THEME_STYLES[theme];
 
   const hasLink = Boolean(featuredNotice?.linkUrl && featuredNotice.linkUrl.trim());
   const isExternal =
