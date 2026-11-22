@@ -6,6 +6,8 @@
 
 set -e # Exit immediately on error
 
+cd /var/www/niyatuae.com
+
 echo "🚀 [1/5] Pulling latest code from git..."
 git pull origin main
 

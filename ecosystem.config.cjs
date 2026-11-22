@@ -4,7 +4,7 @@ module.exports = {
       name: "niyat-store",
       script: "node_modules/next/dist/bin/next",
       args: "start -p 3008",
-      cwd: "./",
+      cwd: "/var/www/niyatuae.com",
       instances: 1,
       exec_mode: "fork",
       max_memory_restart: "800M",
