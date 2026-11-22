@@ -5,8 +5,8 @@ module.exports = {
       script: "node_modules/next/dist/bin/next",
       args: "start -p 3000",
       cwd: "./",
-      instances: "max", // or 1-2 depending on VPS CPU cores
-      exec_mode: "cluster",
+      instances: 1,
+      exec_mode: "fork",
       max_memory_restart: "800M",
       autorestart: true,
       watch: false,

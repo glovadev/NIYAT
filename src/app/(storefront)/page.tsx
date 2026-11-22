@@ -11,8 +11,6 @@ import { PromoBanner, PromoBannerData } from "@/components/storefront/PromoBanne
 import { ArrowRight, Sparkles, ShieldCheck, HeartHandshake, Truck, Star, Award, Crown } from "lucide-react";
 
 import { Banner } from "@/models/Banner";
-import { Notice } from "@/models/Notice";
-import { NoticeSection, NoticeData } from "@/components/storefront/NoticeSection";
 
 const PRESTIGE_PILLARS = [
   {
@@ -44,11 +42,10 @@ export default async function HomePage() {
   let categories: any[] = [];
   let dbBanners: any[] = [];
   let dbPromoBanners: any[] = [];
-  let dbNotice: any = null;
 
   try {
     await connectToDatabase();
-    [dbProducts, categories, dbBanners, dbPromoBanners, dbNotice] = await Promise.all([
+    [dbProducts, categories, dbBanners, dbPromoBanners] = await Promise.all([
       Product.find({ status: "PUBLISHED" })
         .populate("categoryId", "name slug")
         .sort({ isFeatured: -1, createdAt: -1 })
@@ -60,30 +57,10 @@ export default async function HomePage() {
       Banner.find({ placement: "HOME_PROMO", status: "ACTIVE" })
         .sort({ sortOrder: 1, createdAt: -1 })
         .lean(),
-      Notice.findOne({ isActive: true })
-        .sort({ sortOrder: 1, updatedAt: -1 })
-        .lean(),
     ]);
   } catch (dbError) {
     console.error("HomePage: Database connection or query error:", dbError);
   }
-
-  // Admin-managed Store Update or Notice Section
-  const activeNoticeData: NoticeData | null =
-    dbNotice && dbNotice.isActive
-      ? {
-          id: String(dbNotice._id),
-          title: dbNotice.title || "",
-          message: dbNotice.message || "",
-          badge: dbNotice.badge || "Notice & Update",
-          linkUrl: dbNotice.linkUrl || "",
-          linkText: dbNotice.linkText || "",
-          theme: dbNotice.theme || "EMERALD",
-          icon: dbNotice.icon || "SPARKLES",
-          isActive: Boolean(dbNotice.isActive),
-          updatedAt: dbNotice.updatedAt,
-        }
-      : null;
 
   // Admin-managed middle promotional banner (placed between Bestsellers & Trending)
   const activePromo = dbPromoBanners && dbPromoBanners.length > 0 ? dbPromoBanners[0] : null;
@@ -299,13 +276,6 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
-
-      {/* ================================================================= */}
-      {/* D. STORE NOTICE OR UPDATE (ADMIN CONTROLLED)                      */}
-      {/* Dynamic: Only rendered when an active notice is enabled by admin. */}
-      {/* When admin disables it, it will not be shown at all.              */}
-      {/* ================================================================= */}
-      {activeNoticeData && <NoticeSection notice={activeNoticeData} />}
 
       {/* ================================================================= */}
       {/* E. SHOP BY CATEGORY                                               */}
