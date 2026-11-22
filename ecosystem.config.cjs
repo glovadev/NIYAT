@@ -3,7 +3,7 @@ module.exports = {
     {
       name: "niyat-store",
       script: "node_modules/next/dist/bin/next",
-      args: "start -p 3000",
+      args: "start -p 3008",
       cwd: "./",
       instances: 1,
       exec_mode: "fork",
@@ -12,7 +12,7 @@ module.exports = {
       watch: false,
       env: {
         NODE_ENV: "production",
-        PORT: 3000,
+        PORT: 3008,
       },
     },
   ],
